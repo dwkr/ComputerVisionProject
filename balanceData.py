@@ -1,4 +1,5 @@
 import numpy as np
+from game_controls import *
 
 def balance_data(data):
 	left = []
@@ -7,25 +8,14 @@ def balance_data(data):
 	reverse = []
 	no_action = []
 
-	w = [1,0,0,0,0,0,0,0,0]
-	a = [0,1,0,0,0,0,0,0,0]
-	s = [0,0,1,0,0,0,0,0,0]
-	d = [0,0,0,1,0,0,0,0,0]
-	wa = [0,0,0,0,1,0,0,0,0]
-	wd = [0,0,0,0,0,1,0,0,0]
-	sa = [0,0,0,0,0,0,1,0,0]
-	sd = [0,0,0,0,0,0,0,1,0]
-	nk = [0,0,0,0,0,0,0,0,1]
-
-	
 	for d in data:
-		if d[1] == w:
+		if d[1] == keysW:
 			straight.append(d)
-		elif d[1] == wa or d[1] == a:
+		elif d[1] == keysWA or d[1] == keysA:
 			left.append(d)
-		elif d[1] == wd or d[1] == d:
+		elif d[1] == keysWD or d[1] == keysD:
 			right.append(d)
-		elif d[1] == nk:
+		elif d[1] == keysNK:
 			no_action.append(d)
 		else:
 			reverse.append(d)
