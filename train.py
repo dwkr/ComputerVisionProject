@@ -5,11 +5,18 @@ import torch.optim as optim
 from torch.autograd import Variable
 import torchvision
 
+USE_CUDA = torch.cuda.device_count() >= 1
+
 def convert_to_torch_tensor(data_X, data_Y):
 	X, Y = torch.from_numpy(data_X), torch.from_numpy(data_Y)
+	if USE_CUDA:
+            X = X.cuda()
+            Y = Y.cuda()
 	return X, Y
 
 def train(model, data_X, data_Y, n_epochs = 20, learning_rate = 0.01, print_after_every = 2):
+	if USE_CUDA:
+            model=model.cuda()
 	optimizer = optim.SGD(model.parameters(), lr=learning_rate)
 	model.train()
 	data_X, data_Y = convert_to_torch_tensor(data_X, data_Y)
@@ -28,6 +35,8 @@ def train(model, data_X, data_Y, n_epochs = 20, learning_rate = 0.01, print_afte
 					epoch, batch_idx , data_X.shape[0], loss.item()))
 
 def test(model, data_X, data_Y):
+	if USE_CUDA:
+            model=model.cuda()
 	model.eval()
 	data_X, data_Y = convert_to_torch_tensor(data_X, data_Y)
 	loss= 0

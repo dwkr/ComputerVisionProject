@@ -2,7 +2,7 @@ import math
 import numpy as np
 import glob
 from balanceData import balance_data
-from visualizeData import visualize_raw_data, visualize_batch_data
+#from visualizeData import visualize_raw_data, visualize_batch_data
 from random import shuffle
 import models
 from train import train, test
@@ -59,7 +59,7 @@ def train_AI(input_path, model_save_path):
 	print("Model Created successfully")
 
 	print("Starting Training")
-	train(model, train_data_X, train_data_Y, 1, 0.01, 2)
+	train(model, train_data_X, train_data_Y, 20, 0.01, 1)
 	print("Training Completed")
 
 	print("Testing on Validation Set")
@@ -72,6 +72,6 @@ def train_AI(input_path, model_save_path):
 
 
 if __name__ == "__main__":
-	train_AI('/Users/Rajatagarwal/Desktop/NYU_Academics/Sem_3/CV/Project/input/*.npy', 
-		'/Users/Rajatagarwal/Desktop/NYU_Academics/Sem_3/CV/Project/models/SimpleConvNet')
+	train_AI('/data/ra2630/CV/Project/input/*.npy', 
+		'/data/ra2630/CV/Project/models/SimpleConvNet')
 
