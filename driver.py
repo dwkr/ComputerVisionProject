@@ -20,7 +20,7 @@ parser.add_argument('--batch_size', type=int, default=32,
 parser.add_argument('--gpu', action='store_true', default=False,
 	help='Use GPU')
 
-parser.add_argument('--balance', action='store_true', default=True,
+parser.add_argument('--balance', action='store_true', default=False,
 	help='Balance Data')
 
 parser.add_argument('--lr', type=float, default=3e-4,
@@ -63,15 +63,16 @@ def load_data(input_path, balance, shuffe_data = True):
 	all_data = []
 	for file in files:
 		data = np.load(file)
-		if balance:
-			_, balanced_data = balance_data(data)
-		else:
-			balanced_data = data
-		if(shuffe_data):
-			shuffle(balanced_data)
-		all_data.extend(balanced_data)
+		all_data.extend(data)
+
+	if balance:
+		shuffle(all_data)
+		_, all_data = balance_data(all_data)
+		print("Data Stats : ", _)
+	
 	if(shuffe_data):
 		shuffle(all_data)
+
 	print("Data Read successfully")
 	return all_data
 
@@ -109,12 +110,14 @@ def train_AI(input_path, model_save_path):
 	print("Starting Training")
 	train(model, train_data_X, train_data_Y, args.num_epochs, args.lr, args.gpu, args.print_after)
 	print("Training Completed")
-
-	print("Testing on Validation Set")
-	test(model, validation_data_X, validation_data_Y, args.gpu)
-
-	print("Testing on Test Set")
-	test(model, test_data_X, test_data_Y, args.gpu)
+	
+	if(validation_data_X.shape[0] * validation_data_X.shape[1] > 0):
+	    print("Testing on Validation Set")
+	    test(model, validation_data_X, validation_data_Y, args.gpu)
+	
+	if( test_data_X.shape[0] * test_data_X.shape[1] > 0):
+	    print("Testing on Test Set")
+	    test(model, test_data_X, test_data_Y, args.gpu)
 
 
 	print("Saving model to ", model_save_path)
