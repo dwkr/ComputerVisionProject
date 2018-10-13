@@ -7,7 +7,6 @@ def field_of_view(image):
 	width = image.shape[1]
 	fields = np.array([
 		[(0,height), (92, 133), (216, 133), (width, height)],
-		[(50,height), (75, 150), (210,150), (220, height)]
 		])
 	mask = np.zeros_like(image)
 	cv2.fillPoly(mask, fields, 255)
@@ -73,7 +72,6 @@ def find_lanes(img):
 	blur = cv2.GaussianBlur(gray, (5,5), 0)
 	canny = cv2.Canny(blur, 50, 150)
 	masked_image = field_of_view(canny)
-	return masked_image
 	lines = cv2.HoughLinesP(masked_image, 2, np.pi/180, 100, np.array([]), minLineLength = 40, maxLineGap = 5)
 	lanes = avg_slope_intercept(img, lines)
 	line_image = display_lines(img, lanes)
