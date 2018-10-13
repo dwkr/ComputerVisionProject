@@ -20,9 +20,10 @@ def balance_data(data):
 		else:
 			reverse.append(d)
 
-	straight = straight[:len(left)][:len(right)]
-	left = left[:len(straight)]
-	right = right[:len(straight)]
+	straight = straight[:2 * len(left)][:2 * len(right)]
+	left = left[:2 * len(straight)]
+	right = right[:2 * len(straight)]
+	no_action = no_action[:2 * len(straight)]
 	balanced_data = straight + left + right + reverse + no_action
 	
 	stats = {
