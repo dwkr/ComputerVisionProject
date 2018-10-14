@@ -9,7 +9,7 @@ def convert_to_torch_tensor(data_X, data_Y):
 	X, Y = torch.from_numpy(data_X), torch.from_numpy(data_Y)
 	return X, Y
 
-def train(model, data_X, data_Y, n_epochs, learning_rate, GPU, print_after_every = 2):
+def train(model, data_X, data_Y, validation_data_X, validation_data_Y, n_epochs, learning_rate, GPU, gpu_number, model_save_path, print_after_every = 2, validate_after_every = 2, save_after_every = 2):
 	USE_CUDA = torch.cuda.device_count() >= 1 and GPU
             
 	optimizer = optim.SGD(model.parameters(), lr=learning_rate)
@@ -17,14 +17,15 @@ def train(model, data_X, data_Y, n_epochs, learning_rate, GPU, print_after_every
 	data_X, data_Y = convert_to_torch_tensor(data_X, data_Y)
 
 	if USE_CUDA:
-		data_X = data_X.cuda()
-		data_Y = data_Y.cuda()
-		model = model.cuda()
+		model = model.cuda(gpu_number)
 
 	for epoch in range(n_epochs):
 		for batch_idx in range(data_X.shape[0]):
 			X = Variable(data_X[batch_idx])
 			Y = torch.max(Variable(data_Y[batch_idx]), 1)[1]
+			if USE_CUDA:
+				X = X.cuda(gpu_number)
+				Y = Y.cuda(gpu_number)
 			optimizer.zero_grad()
 			prediction = model(X)
 			loss = F.cross_entropy(prediction, Y)
@@ -34,15 +35,31 @@ def train(model, data_X, data_Y, n_epochs, learning_rate, GPU, print_after_every
 				print('Train Epoch: {} Batch Index: {} Total Number of Batches: {} \tLoss: {:.6f}'.format(
 					epoch, batch_idx , data_X.shape[0], loss.item()))
 
-def test(model, data_X, data_Y, GPU):
+		if epoch % validate_after_every == 0:
+			if epoch % validate_after_every == 0:
+				print('Testing on Validation Set')
+				test(model, validation_data_X, validation_data_Y, GPU, gpu_number)
+			else:
+				print("Validation Set Size = 0, not validating")
+
+		if epoch % save_after_every == 0:
+			print("Saving model to ", model_save_path)
+			if USE_CUDA:
+				torch.save(model.cpu().state_dict(), model_save_path)
+				model = model.cuda(gpu_number)
+			else:
+				torch.save(model.state_dict(), model_save_path)
+			print("Model saved Successfully")
+
+def test(model, data_X, data_Y, GPU, gpu_number):
 	USE_CUDA = torch.cuda.device_count() >= 1 and GPU
 	model.eval()
 	data_X, data_Y = convert_to_torch_tensor(data_X, data_Y)
 
 	if USE_CUDA:
-		data_X = data_X.cuda()
-		data_Y = data_Y.cuda()
-		model = model.cuda()
+		data_X = data_X.cuda(gpu_number)
+		data_Y = data_Y.cuda(gpu_number)
+		model = model.cuda(gpu_number)
 
 	loss= 0
 	correct = 0
@@ -55,7 +72,7 @@ def test(model, data_X, data_Y, GPU):
 		correct += prediction.eq(Y.data.view_as(prediction)).cpu().sum()
 	data_len = data_X.shape[0] * data_X.shape[1]
 	loss /= data_len
-	print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+	print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.4f}%)\n'.format(
 		loss, correct, data_X.shape[0] * data_X.shape[1],
 		100. * correct / data_len))
 

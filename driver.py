@@ -20,6 +20,9 @@ parser.add_argument('--batch_size', type=int, default=32,
 parser.add_argument('--gpu', action='store_true', default=False,
 	help='Use GPU')
 
+parser.add_argument('--gpu_number', default=0, type=int,
+	help='Which GPU to run on')
+
 parser.add_argument('--balance', action='store_true', default=False,
 	help='Balance Data')
 
@@ -47,6 +50,12 @@ parser.add_argument('--model', default='SimpleConvNet', type=str,
 parser.add_argument('--print_after', default=1, type=int,
 	help='Print Loss after every n iterations')
 
+parser.add_argument('--validate_after', default=1, type=int,
+	help='Validate after every n iterations')
+
+parser.add_argument('--save_after', default=1, type=int,
+	help='Save after every n iterations')
+
 args = parser.parse_args()
 print(args)
 
@@ -62,10 +71,12 @@ def load_data(input_path, balance, shuffe_data = True):
 	print("Number of files available : ", len(files))
 	all_data = []
 	for file in files:
+		print("loading file", file)
 		data = np.load(file)
 		all_data.extend(data)
 
 	if balance:
+		print("Balancing Data")
 		shuffle(all_data)
 		_, all_data = balance_data(all_data)
 		print("Data Stats : ", _)
@@ -108,7 +119,7 @@ def train_AI(input_path, model_save_path):
 	print("Model Created successfully")
 
 	print("Starting Training")
-	train(model, train_data_X, train_data_Y, args.num_epochs, args.lr, args.gpu, args.print_after)
+	train(model, train_data_X, train_data_Y, validation_data_X, validation_data_Y,  args.num_epochs, args.lr, args.gpu, args.gpu_number, args.save_model, args.print_after, args.validate_after, args.save_after)
 	print("Training Completed")
 	
 	if(validation_data_X.shape[0] * validation_data_X.shape[1] > 0):
@@ -117,7 +128,7 @@ def train_AI(input_path, model_save_path):
 	
 	if( test_data_X.shape[0] * test_data_X.shape[1] > 0):
 	    print("Testing on Test Set")
-	    test(model, test_data_X, test_data_Y, args.gpu)
+	    test(model, test_data_X, test_data_Y, args.gpu, args.gpu_number)
 
 
 	print("Saving model to ", model_save_path)
