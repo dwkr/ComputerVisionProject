@@ -1,13 +1,15 @@
 import math
 import numpy as np
 import glob
-from balanceData import balance_data
+from balanceData import balance_data, gen_stats
 import argparse
 from visualizeData import visualize_raw_data, visualize_batch_data
+import random
 from random import shuffle
 import models
 from train import train, test
-import torch
+import logging
+from datetime import datetime
 
 parser = argparse.ArgumentParser(description="Autonomous Driving for GTA 5")
 
@@ -25,6 +27,9 @@ parser.add_argument('--gpu_number', default=0, type=int,
 
 parser.add_argument('--balance', action='store_true', default=False,
 	help='Balance Data')
+
+parser.add_argument('--shuffle_data', action='store_true', default=False,
+	help='Shuffle Train Data')
 
 parser.add_argument('--lr', type=float, default=3e-4,
 	help='Learning rate')
@@ -44,6 +49,9 @@ parser.add_argument('--train_data', default='../input/*.npy', type=str,
 parser.add_argument('--save_model', default='../models/', type=str,
 	help='path to directory to save model weights')
 
+parser.add_argument('--log_dir', default='../logs/', type=str,
+	help='path to directory to save logs')
+
 parser.add_argument('--model', default='SimpleConvNet', type=str,
 	help='Which model to use')
 
@@ -56,12 +64,22 @@ parser.add_argument('--validate_after', default=1, type=int,
 parser.add_argument('--save_after', default=1, type=int,
 	help='Save after every n iterations')
 
+parser.add_argument('--seed', default=7, type=int,
+	help='Random Seed to Set')
+
 args = parser.parse_args()
-print(args)
+
+random.seed(args.seed)
+logging.basicConfig(level=logging.INFO,
+	filename= args.log_dir + datetime.now().strftime('app_%d_%m_%Y_%H_%M_%S.log'),
+	filemode='w',
+	format='%(name)s - %(levelname)s - %(message)s'
+)
+
+logging.info(args)
 
 if(args.train_ratio + args.test_ratio + args.validation_ratio != 1.0):
-	raise ValueError('Sum of Train, Test and Validation Ratios must be 1.0, \
-		it is : ', args.train_ratio + args.test_ratio + args.validation_ratio)
+	raise ValueError('Sum of Train, Test and Validation Ratios must be 1.0')
 
 def selectModel():
 	if args.model == "SimpleConvNet":
@@ -70,25 +88,29 @@ def selectModel():
 		return models.AlexNet(9)
 
 def load_data(input_path, balance, shuffe_data = True):
-	print("Reading files from ", input_path)
+	logging.info("Reading files from {}".format(input_path))
 	files = glob.glob(input_path)
-	print("Number of files available : ", len(files))
+	logging.info("Number of files available : {}".format(len(files)))
 	all_data = []
 	for file in files:
-		print("loading file", file)
+		logging.info("loading file {} ".format(file))
 		data = np.load(file)
 		all_data.extend(data)
 
 	if balance:
-		print("Balancing Data")
+		logging.info("Balancing Data")
 		shuffle(all_data)
-		_, all_data = balance_data(all_data)
-		print("Data Stats : ", _)
-	
+		stats_data, all_data = balance_data(all_data)
+		logging.info("Data Stats for balanced data: {}".format(stats_data))
+	else:
+		logging.info("Not Balancing Data")
+		stats_data = gen_stats(data)
+		logging.info("Data Stats for unblanced data: {}".format(stats_data))
+
 	if(shuffe_data):
 		shuffle(all_data)
 
-	print("Data Read successfully")
+	logging.info("Data Read successfully")
 	return all_data
 
 def create_sets(data, train_ratio, validation_ratio, test_ratio):
@@ -109,35 +131,30 @@ def create_batches(data, batch_size):
 	return X,Y
 
 def train_AI(input_path, model_save_path):
-	data = load_data(input_path, balance = args.balance, shuffe_data = True)
+	data = load_data(input_path, balance = args.balance, shuffe_data = args.shuffle_data)
 	batched_data_X, batched_data_Y = create_batches(data, args.batch_size)
 	train_data_X, validation_data_X, test_data_X = create_sets(batched_data_X, args.train_ratio, args.validation_ratio, args.test_ratio)
 	train_data_Y, validation_data_Y, test_data_Y = create_sets(batched_data_Y, args.train_ratio, args.validation_ratio, args.test_ratio)
 
-	print("Number of Training Examples : ", train_data_X.shape[0] * train_data_X.shape[1])
-	print("Number of Validation Examples : ", validation_data_X.shape[0] * validation_data_X.shape[1])
-	print("Number of Test Examples : ", test_data_X.shape[0] * test_data_X.shape[1])
+	logging.info("Number of Training Examples : {}".format(train_data_X.shape[0] * train_data_X.shape[1]))
+	logging.info("Number of Validation Examples : {}".format(validation_data_X.shape[0] * validation_data_X.shape[1]))
+	logging.info("Number of Test Examples : {}".format(test_data_X.shape[0] * test_data_X.shape[1]))
 
-	print("Creating Model Graph")
+	logging.info("Creating Model Graph")
 	model = selectModel()
-	print("Model Created successfully")
+	logging.info("Model Created successfully")
 
-	print("Starting Training")
-	train(model, train_data_X, train_data_Y, validation_data_X, validation_data_Y,  args.num_epochs, args.lr, args.gpu, args.gpu_number, args.save_model, args.print_after, args.validate_after, args.save_after)
-	print("Training Completed")
+	logging.info("Starting Training")
+	train(logging, model, train_data_X, train_data_Y, validation_data_X, validation_data_Y,  args.num_epochs, args.lr, args.gpu, args.gpu_number, args.save_model, args.print_after, args.validate_after, args.save_after)
+	logging.info("Training Completed")
 	
 	if(validation_data_X.shape[0] * validation_data_X.shape[1] > 0):
-	    print("Testing on Validation Set")
-	    test(model, validation_data_X, validation_data_Y, args.gpu)
+	    logging.info("Testing on Validation Set")
+	    test(logging, model, validation_data_X, validation_data_Y, args.gpu)
 	
 	if( test_data_X.shape[0] * test_data_X.shape[1] > 0):
-	    print("Testing on Test Set")
-	    test(model, test_data_X, test_data_Y, args.gpu, args.gpu_number)
-
-
-	print("Saving model to ", model_save_path)
-	torch.save(model.state_dict(), model_save_path)
-	print("Model saved Successfully")
+	    logging.info("Testing on Test Set")
+	    test(logging, model, test_data_X, test_data_Y, args.gpu, args.gpu_number)
 
 
 if __name__ == "__main__":

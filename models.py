@@ -77,7 +77,8 @@ class AlexNet(nn.Module):
         )
 
     def forward(self, x):
-        x = x.view(x.shape[0], x.shape[-1], x.shape[1], x.shape[2])
+        
+        x = x.view(-1, 3, 299, 299)
         x = self.features(x)
         x = x.view(-1, 256 * 8 * 8)
         x = self.classifier(x)
