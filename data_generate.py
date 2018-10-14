@@ -10,17 +10,19 @@ from get_keys import key_check
 from game_controls import *
 
 STARTING_IDX = 1
+DATA_PATH = "D:\\data\\"
 
 while True:
-	file_name = 'train_data_{}.npy'.format(STARTING_IDX)
-	
-	if os.path.isfile(file_name):
-		print(os.path.abspath(file_name))
-		print("File exsits for idx ",STARTING_IDX)
-		STARTING_IDX += 1
-	else:
-		print("File not found ",file_name)
-		break
+    file_name = 'train_data_{}.npy'.format(STARTING_IDX)
+    file_name = DATA_PATH + file_name
+
+    if os.path.isfile(file_name):
+        print(os.path.abspath(file_name))
+        print("File exsits for idx ",STARTING_IDX)
+        STARTING_IDX += 1
+    else:
+        print("File not found ",file_name)
+        break
 
 def keys_to_output(keys):
    '''
@@ -49,7 +51,7 @@ def keys_to_output(keys):
        output = keysD
    else:
        output = keysNK
-	   
+       
    if 'W' in keys:
        output2[0] = 1
    if 'A' in keys:
@@ -58,44 +60,41 @@ def keys_to_output(keys):
        output2[2] = 1
    if 'D' in keys:
        output2[3] = 1
-		
+        
    return output, output2
-		
+        
 def generateData(file_name, idx):
-	train_data = []
-	print("Starting in 5 secs")
-	time.sleep(5)
-	print("Starting!!!!!!")
-	last_time = time.time()
-	paused = False
-	while True:
-		keys = key_check()
-		if 'P' in keys:
-			paused = not paused
-			print("Paused: ", paused)
-		
-		if not paused:
-			last_time = time.time()
-			screen = np.array(ImageGrab.grab(bbox=(0,40,800,640)))[:,:,0:3]
-			screen = cv2.resize(screen, (299, 299))
-			screen = cv2.cvtColor(screen,cv2.COLOR_BGR2RGB)
-			
-			keys_pressed = key_check()
-			output, output2 = keys_to_output(keys_pressed)
-			
-			train_data.append([screen,output,output2])
-			if len(train_data) % 10 == 0:
-				print("length ",len(train_data))
-			if len(train_data) == 500:
-				print("Saving")
-				np.save(file_name,train_data)
-				print("Saved to file - ",file_name)
-				idx +=1
-				train_data = []
-				file_name = 'train_data_{}.npy'.format(idx)
-				
-		
-	
-		
+    train_data = []
+    print("Starting in 5 secs")
+    time.sleep(5)
+    print("Starting!!!!!!")
+    last_time = time.time()
+    paused = False
+    while True:
+        keys = key_check()
+        if 'P' in keys:
+            paused = not paused
+            print("Paused: ", paused)
+        
+        if not paused:
+            last_time = time.time()
+            screen = np.array(ImageGrab.grab(bbox=(0,40,800,640)))[:,:,0:3]
+            screen = cv2.resize(screen, (299, 299))
+            screen = cv2.cvtColor(screen,cv2.COLOR_BGR2RGB)
+            
+            keys_pressed = key_check()
+            output, output2 = keys_to_output(keys_pressed)
+            
+            train_data.append([screen,output,output2])
+            if len(train_data) % 10 == 0:
+                print("length ",len(train_data))
+            if len(train_data) == 500:
+                print("Saving")
+                np.save(file_name,train_data)
+                print("Saved to file - ",file_name)
+                idx +=1
+                train_data = []
+                file_name = 'train_data_{}.npy'.format(idx)
+                file_name = DATA_PATH + file_name
 
 generateData(file_name,STARTING_IDX)

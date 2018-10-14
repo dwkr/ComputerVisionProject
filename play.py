@@ -1,14 +1,16 @@
 import numpy as np
 import cv2
+from PIL import ImageGrab
 import pyscreenshot as pyscr
 from game_controls import *
 from models import *
 from directkeys import PressKey, ReleaseKey, W, A, S, D
 from get_keys import key_check
 import sys
+import time
 
 def get_input_from_screen():
-    screen = np.array(pyscr.grab(bbox=(0,40,800,640)), dtype=np.float32)[:,:,0:3]
+    screen = np.array(ImageGrab.grab(bbox=(0,40,800,640)), dtype=np.float32)[:,:,0:3]
     screen = cv2.resize(screen, (299, 299))
     screen = cv2.cvtColor(screen,cv2.COLOR_BGR2RGB)
     return torch.from_numpy(screen)
@@ -51,21 +53,30 @@ def perform_action(inp):
 
 def play_GTA(model):
     quit = False
+    paused = False
 
     while not quit:
+        keys = key_check()
+        #keys = 'W'
+        if 'Q' in keys:
+            quit = True
+
+        if 'P' in keys:
+            paused = ~paused
+
+        if paused:
+            continue
         inp = get_input_from_screen()
         prediction = model(inp)
         key_pressed = perform_action(prediction.max(1)[1].numpy()[0])
+        time.sleep(1)
         print(prediction.detach().numpy()[0], "Action = ",prediction, key_pressed)
-        keys = key_check()
-        keys = 'W'
-        if 'Q' in keys:
-            quit = True
+
 
 if __name__ == "__main__":
     model = SimpleConvNet(9)
     if len(sys.argv) < 2:
         print("Please provide the path to load model !!")
         sys.exit()
-    model.load_state_dict(torch.load(sys.argv[1]))
+    model.load_state_dict(torch.load(sys.argv[1], map_location='cpu'))
     play_GTA(model)
