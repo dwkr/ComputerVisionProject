@@ -59,11 +59,15 @@ parser.add_argument('--save_after', default=1, type=int,
 args = parser.parse_args()
 print(args)
 
-
+if(args.train_ratio + args.test_ratio + args.validation_ratio != 1.0):
+	raise ValueError('Sum of Train, Test and Validation Ratios must be 1.0, \
+		it is : ', args.train_ratio + args.test_ratio + args.validation_ratio)
 
 def selectModel():
 	if args.model == "SimpleConvNet":
 		return models.SimpleConvNet(9)
+	if args.model == "AlexNet":
+		return models.AlexNet(9)
 
 def load_data(input_path, balance, shuffe_data = True):
 	print("Reading files from ", input_path)
