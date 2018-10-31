@@ -95,7 +95,8 @@ def load_data(input_path, balance, shuffe_data = True):
 	for file in files:
 		logging.info("loading file {} ".format(file))
 		data = np.load(file)
-		all_data.extend(data)
+        features = getFeatures(data)
+		all_data.extend(features)
 
 	if balance:
 		logging.info("Balancing Data")
@@ -126,13 +127,16 @@ def create_sets(data, train_ratio, validation_ratio, test_ratio):
 def create_batches(data, batch_size):
 	n_batches = int(math.floor(len(data)/batch_size))
 	data = data[:n_batches*batch_size]
-	X = np.array([i[0] for i in data], dtype=np.float32).reshape(n_batches,batch_size,299,299,3)
+	X1 = np.array([i[0] for i in data], dtype=np.float32).reshape(n_batches,batch_size,299,299,3)
+    X2 = np.array([i[2] for i in data], dtype=np.float32).reshape(n_batches,batch_size,64,64,1)
+    X3 = np.array([i[3] for i in data], dtype=np.float32).reshape(n_batches,batch_size,64,64,1)
+    X4 = np.array([i[4] for i in data], dtype=np.float32).reshape(n_batches,batch_size,100,5)
 	Y = np.array([i[1] for i in data]).reshape(n_batches, batch_size, 9)
-	return X,Y
+	return X1, X2, X3, X4, Y
 
 def train_AI(input_path, model_save_path):
 	data = load_data(input_path, balance = args.balance, shuffe_data = args.shuffle_data)
-	batched_data_X, batched_data_Y = create_batches(data, args.batch_size)
+	batched_data_X1, batched_data_X2, batched_data_X3, batched_data_X4, batched_data_Y = create_batches(data, args.batch_size)
 	train_data_X, validation_data_X, test_data_X = create_sets(batched_data_X, args.train_ratio, args.validation_ratio, args.test_ratio)
 	train_data_Y, validation_data_Y, test_data_Y = create_sets(batched_data_Y, args.train_ratio, args.validation_ratio, args.test_ratio)
 
