@@ -1,0 +1,5 @@
+1) check vis_map in whole data.
+2) Hood removal
+3) sky removal
+4) speed recovery
+5) convert BGR to RGB while training

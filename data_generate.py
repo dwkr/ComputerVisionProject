@@ -12,6 +12,11 @@ from game_controls import *
 STARTING_IDX = 1
 DATA_PATH = "D:\\data\\"
 
+max_last_hundred = 100
+last_hundred = []
+for i in range(max_last_hundred):
+    last_hundred.append('')
+
 while True:
     file_name = 'train_data_{}.npy'.format(STARTING_IDX)
     file_name = DATA_PATH + file_name
@@ -30,8 +35,8 @@ def keys_to_output(keys):
     0  1  2  3  4   5   6   7    8
    [W, S, A, D, WA, WD, SA, SD, NOKEY] boolean values.
    '''
-   output = [0,0,0,0,0,0,0,0,0]
-   output2 = [0,0,0,0]
+   output = [0,0,0,0,0]
+   output2 = [0,0,0,0,0]
 
    if 'W' in keys and 'A' in keys:
        output = keysWA
@@ -49,9 +54,11 @@ def keys_to_output(keys):
        output = keysA
    elif 'D' in keys:
        output = keysD
+   elif 'R' in keys:
+       output = keysR
    else:
        output = keysNK
-       
+    
    if 'W' in keys:
        output2[0] = 1
    if 'A' in keys:
@@ -60,8 +67,12 @@ def keys_to_output(keys):
        output2[2] = 1
    if 'D' in keys:
        output2[3] = 1
+   if 'R' in keys:
+       output2[4] = 1
+       
+   to_add = 1 * '' + output2[0] * 'W' + output2[1] * 'A' + output2[2] * 'S' + output2[3] * 'D' + output[4] * 'R'
         
-   return output, output2
+   return output, output2, to_add
         
 def generateData(file_name, idx):
     train_data = []
@@ -69,12 +80,13 @@ def generateData(file_name, idx):
     time.sleep(5)
     print("Starting!!!!!!")
     last_time = time.time()
-    paused = False
+    paused = True
     while True:
         keys = key_check()
         if 'P' in keys:
             paused = not paused
             print("Paused: ", paused)
+            time.sleep(1)
         
         if not paused:
             last_time = time.time()
@@ -83,11 +95,15 @@ def generateData(file_name, idx):
             screen = cv2.cvtColor(screen,cv2.COLOR_BGR2RGB)
             
             keys_pressed = key_check()
-            output, output2 = keys_to_output(keys_pressed)
-            
-            train_data.append([screen,output,output2])
+            #if 'A' in keys_pressed or 'D' in keys_pressed or 'S' in keys_pressed:
+            output, output2, to_add = keys_to_output(keys_pressed)
+            if len(last_hundred) == max_last_hundred:
+                last_hundred.pop(0)
+            last_hundred.append(to_add)
+            train_data.append([screen,output,output2,last_hundred.copy()])
+                
             if len(train_data) % 10 == 0:
-                print("length ",len(train_data))
+                print("length ",len(train_data),end='\r')
             if len(train_data) == 500:
                 print("Saving")
                 np.save(file_name,train_data)
@@ -96,5 +112,11 @@ def generateData(file_name, idx):
                 train_data = []
                 file_name = 'train_data_{}.npy'.format(idx)
                 file_name = DATA_PATH + file_name
+                while os.path.isfile(file_name):
+                    print(os.path.abspath(file_name))
+                    print("File exsits for idx ",STARTING_IDX)
+                    idx +=1
+                    file_name = 'train_data_{}.npy'.format(idx)
+                    file_name = DATA_PATH + file_name
 
 generateData(file_name,STARTING_IDX)
