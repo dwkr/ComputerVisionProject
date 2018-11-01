@@ -6,7 +6,7 @@ import time
 
 if __name__ == "__main__":
 
-    DATA_PATH = "D:\\data\\"
+    DATA_PATH = "../input/"
     data = np.load(DATA_PATH+"train_data_125.npy")
 
     h1,h2,w1,w2 = 248,285,0,60
@@ -30,19 +30,21 @@ if __name__ == "__main__":
             #Y = mp[:, :, 0] * 65.481 + mp[:, :, 1] * 128.553 + mp[:, :, 2] * 24.966 + 16
             #plt.imshow(make_purple_white(mp), cmap='gray')
             bin_map = extractMap(d[0],ch_mapping)#make_purple_white(mp,ch_mapping)
-            cv2.imshow('map',bin_map)
-            cv2.resizeWindow('map',2*bin_map.shape[0],2*bin_map.shape[1])
             bin_speed = extractSpeed(d[0],ch_mapping)#make_purple_white(mp,ch_mapping)
-            cv2.imshow('speed',bin_speed)
-            cv2.resizeWindow('speed',2*bin_speed.shape[0],2*bin_speed.shape[1])
             FOV = restrictFOV(d[0])#make_purple_white(mp,ch_mapping)
-            cv2.imshow('FOV',FOV)
-            cv2.resizeWindow('FOV',2*FOV.shape[0],2*FOV.shape[1])
-            #plt.plot()
+
+            bin_map_3_channel = cv2.cvtColor(bin_map, cv2.COLOR_GRAY2BGR)
+            bin_map_3_channel = cv2.resize(bin_map_3_channel, (299,299))
+            bin_speed_3_channel = cv2.cvtColor(bin_speed, cv2.COLOR_GRAY2BGR)
+            bin_speed_3_channel = cv2.resize(bin_speed_3_channel, (299, 299))
+
             
-            cv2.imshow('iamge',d_rgb)#cv2.cvtColor(d_rgb,cv2.COLOR_RGB2BGR))
-            #cv2.resizeWindow('map',2*bin_map.shape[0],2*bin_map.shape[1])
-            #plt.plot() 
+            numpy_horizontal1 = np.hstack((d_rgb, FOV))
+            numpy_horizontal2 = np.hstack((bin_map_3_channel, bin_speed_3_channel))
+            numpy_vertical = np.vstack((numpy_horizontal1, numpy_horizontal2))
+
+            cv2.imshow('extracted features', numpy_vertical)
+            
             
             print(d[1])
             print(d[2])
