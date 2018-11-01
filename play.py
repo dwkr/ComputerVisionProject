@@ -3,59 +3,37 @@ import cv2
 from PIL import ImageGrab
 import pyscreenshot as pyscr
 from game_controls import *
-from models import *
+from main_model import MainModel
 from directkeys import PressKey, ReleaseKey, W, A, S, D
 from get_keys import key_check
 import sys
 import time
 import random
+from extract_features import extractMap, extractSpeed, restrictFOV
+
+with open("config.json",'r') as file:
+    config = json.load(file)
+
+max_last_hundred = 100
+last_hundred = []
+for i in range(max_last_hundred):
+    last_hundred.append(keysR)
+
 
 def get_input_from_screen():
     screen = np.array(ImageGrab.grab(bbox=(0,40,800,640)), dtype=np.float32)[:,:,0:3]
     screen = cv2.resize(screen, (299, 299))
-    screen = cv2.cvtColor(screen,cv2.COLOR_BGR2RGB)
-    return torch.from_numpy(screen)
+    road_map = extractMap(screen)
+    speed = extractSpeed(screen)
+    image_fov = restrictFOV(screen)
+
+    return torch.from_numpy(image_fov), torch.from_numpy(road_map), torch.from_numpy(speed)
 
 def releaseAll():
     ReleaseKey(W)
     ReleaseKey(A)
     ReleaseKey(S)
-    ReleaseKey(D)    
-    
-# def perform_action(inp):
-    # ReleaseKey(W)
-    # ReleaseKey(A)
-    # ReleaseKey(S)
-    # ReleaseKey(D)
-
-    # if inp == 0:
-        # PressKey(W)
-        # return "W"
-    # if inp == 1:
-        # PressKey(A)
-        # return "A"
-    # if inp == 2:
-        # PressKey(S)
-        # return "S"
-    # if inp == 3:
-        # PressKey(D)
-        # return "D"
-    # if inp == 4:
-        # PressKey(W)
-        # PressKey(A)
-        # return "W, A"
-    # if inp == 5:
-        # PressKey(W)
-        # PressKey(D)
-        # return "W, D"
-    # if inp == 6:
-        # PressKey(S)
-        # PressKey(A)
-        # return "S, A"
-    # if inp == 7:
-        # PressKey(S)
-        # PressKey(D)
-        # return "S, D"
+    ReleaseKey(D)
 
 def perform_action(inp):
     ReleaseKey(W)
@@ -75,7 +53,7 @@ def perform_action(inp):
         PressKey(W) if random.uniform(0,1) > 0.5 else None
         return "D"
     if inp == 3:
-        PressKey(S)
+        PressKey(S) if random.uniform(0,1) > 0.5 else None
         return "S"
     if inp == 4:
         return "NK"
@@ -99,21 +77,30 @@ def play_GTA(model):
 
         if paused:
             continue
-        inp = get_input_from_screen()
-        prediction = model(inp)
+        x1, x2, x3 = get_input_from_screen()
+        x4 = torch.from_numpy(np.array(last_hundred).reshape((100,5)))
+        prediction = model([x1, x2, x3, x4])
         key_pressed = perform_action(prediction.max(1)[1].numpy()[0])
-        #time.sleep(1)
+        last_action = [0,0,0,0,0]
+        last_action[prediction.max(1)[1].numpy()[0]] = 1
+
+        last_hundred.pop(0)
+        last_hundred.append(last_action)
+        
         print(prediction.detach().numpy()[0], "Action = ",prediction, key_pressed)
 
 
 if __name__ == "__main__":
-    if "Alex" in sys.argv[1]:
-        model = AlexNet(int(sys.argv[2]))
-    else:
-        model = SimpleConvNet(int(sys.argv[2]))
+
+    print("Creating Model Graph")
+    model = MainModel(config['model_dict'],5)
+    print("Model Created successfully")
     
     if len(sys.argv) < 2:
         print("Please provide the path to load model !!")
         sys.exit()
+    print("Loading Model Weights")
     model.load_state_dict(torch.load(sys.argv[1], map_location='cpu'))
+    print("Loaded Model Weights, Starting now !!!")
     play_GTA(model)
+
