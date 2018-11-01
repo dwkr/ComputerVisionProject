@@ -30,7 +30,6 @@ def make_blue_white(image,mapping):
                             image[:,:,mapping['R_ch']] +50 < image[:,:,mapping['B_ch']],
                             image[:,:,mapping['G_ch']] +50  < image[:,:,mapping['B_ch']])
 
-    print(np.unique(image[:,:,mapping['B_ch']] >180, return_counts=True))
     return_img[return_mask] = 255
     return return_img.astype(dtype=np.uint8) 
     
@@ -64,5 +63,5 @@ def oneHotLastHundred(last100):
 def getFeatures(data):
     ret = []
     for d in data:
-        ret.extend([restrictFOV(d[0]),d[1],extractMap(d[0]),extractSpeed(d[0]),oneHotLastHundred(d[3])])
+        ret.append([restrictFOV(d[0]),d[1],extractMap(d[0]),extractSpeed(d[0]),oneHotLastHundred(d[3])])
     return ret
