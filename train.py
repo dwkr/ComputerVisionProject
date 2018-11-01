@@ -13,7 +13,7 @@ def convert_to_torch_tensor(data_X, data_Y):
 def train(logging, model, data_X, data_Y, validation_data_X, validation_data_Y, n_epochs, learning_rate, GPU, gpu_number, model_save_path, print_after_every = 2, validate_after_every = 2, save_after_every = 2):
     USE_CUDA = torch.cuda.device_count() >= 1 and GPU
             
-    optimizer = optim.SGD(model.parameters(), lr=learning_rate)
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     model.train()
     data_X, data_Y = convert_to_torch_tensor(data_X, data_Y)
 
@@ -36,22 +36,23 @@ def train(logging, model, data_X, data_Y, validation_data_X, validation_data_Y, 
             optimizer.step()
             if batch_idx % print_after_every == 0:
                 logging.info('Train Epoch: {} Batch Index: {} Total Number of Batches: {} \tLoss: {:.6f}'.format(
-                    epoch, batch_idx , data_X.shape[0], loss.item()))
+                    epoch, batch_idx , num_batches, loss.item()))
 
         if epoch % validate_after_every == 0:
-            if epoch % validate_after_every == 0:
+            if validation_data_X[0].shape[0] * validation_data_X[0].shape[1] > 0:
                 logging.info('Testing on Validation Set')
                 test(logging, model, validation_data_X, validation_data_Y, GPU, gpu_number)
             else:
                 logging.info("Validation Set Size = 0, not validating")
 
         if epoch % save_after_every == 0:
-            logging.info("Saving model to {}".format(model_save_path))
+            model_save_file = model_save_path + model.name() + "_" + str(epoch) + ".pth"
+            logging.info("Saving model to {}".format(model_save_file))
             if USE_CUDA:
-                torch.save(model.cpu().state_dict(), model_save_path)
+                torch.save(model.cpu().state_dict(), model_save_file)
                 model = model.cuda(gpu_number)
             else:
-                torch.save(model.state_dict(), model_save_path)
+                torch.save(model.state_dict(), model_save_file)
             logging.info("Model saved Successfully")
 
 def test(logging, model, data_X, data_Y, GPU, gpu_number):

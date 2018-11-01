@@ -5,7 +5,7 @@ class Image_Xception(nn.Module):
     """docstring for Image_Xception"""
     def __init__(self,num_inputs, num_outputs):
        super(Image_Xception, self).__init__()
-       self.model = xception(num_outputs)
+       self.model = xception(num_classes=num_outputs)
 
     def forward(self, x):
        x = self.model(x)

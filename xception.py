@@ -202,7 +202,6 @@ def xception(pretrained=False,**kwargs):
     """
     Construct Xception.
     """
-
     model = Xception(**kwargs)
     if pretrained:
         pass

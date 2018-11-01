@@ -91,7 +91,7 @@ if args.print:
     root.addHandler(ch)
 
 logging.basicConfig(level=logging.INFO,
-    filename= args.log_dir + datetime.now().strftime('app_%d_%m_%Y_%H_%M_%S.log'),
+    filename= args.log_dir + datetime.now().strftime('GTA_%d_%m_%Y_%H_%M_%S.log'),
     filemode='w',
     format='%(name)s - %(levelname)s - %(message)s'
 )

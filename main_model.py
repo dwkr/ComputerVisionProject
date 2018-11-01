@@ -16,24 +16,27 @@ class MainModel(nn.Module):
         super(MainModel, self).__init__()
 
         inputs = 0
-        self.models = []
+        m = []
         for key, val in model_dict.items():
-            self.models.append(getattr(sys.modules[__name__],key)(val[0],val[1]))
+            m.append(getattr(sys.modules[__name__],key)(val[0],val[1]))
             inputs += val[1]
-        
+
+
+        self.model1 = m[0]
+        self.model2 = m[1]
+        self.model3 = m[2]
+        self.model4 = m[3]
         self.fc = nn.Sequential(nn.Linear(inputs, 2048),
                                  nn.Linear(2048, 512),
                                  nn.Linear(512,128),
                                  nn.Linear(128,num_classes))
 
     def forward(self, x):
-        x1 = self.models[0](x[0])
-        x2 = self.models[1](x[1])
-        x3 = self.models[2](x[2])
-        x4 = self.models[3](x[3])
-
+        x1 = self.model1(x[0])
+        x2 = self.model2(x[1])
+        x3 = self.model3(x[2])
+        x4 = self.model4(x[3])
         x = torch.cat((x1,x2,x3,x4),dim = -1)
-
         x = self.fc(x)
         return x
 
