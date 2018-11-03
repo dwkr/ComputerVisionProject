@@ -6,6 +6,7 @@ class Image_Xception(nn.Module):
     def __init__(self,num_inputs, num_outputs):
        super(Image_Xception, self).__init__()
        self.model = xception(num_classes=num_outputs)
+       self.model.fc = nn.Linear(2048, num_outputs)
 
     def forward(self, x):
        x = self.model(x)

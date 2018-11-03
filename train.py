@@ -4,6 +4,13 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
 import torchvision
+from functools import partial
+
+loss_fn = F.cross_entropy
+def updateLossWeights(weights = [1,1,1,1,1]):
+    weights = torch.Tensor(weights).type(torch.FloatTensor)
+    global loss_fn 
+    loss_fn = partial(F.cross_entropy, weight= weights)
 
 def convert_to_torch_tensor(data_X, data_Y):
     
@@ -31,7 +38,7 @@ def train(logging, model, data_X, data_Y, validation_data_X, validation_data_Y, 
                 Y = Y.cuda(gpu_number)
             optimizer.zero_grad()
             prediction = model(X)
-            loss = F.cross_entropy(prediction, Y)
+            loss = loss_fn(prediction, Y)
             loss.backward()
             optimizer.step()
             if batch_idx % print_after_every == 0:
@@ -74,7 +81,7 @@ def test(logging, model, data_X, data_Y, GPU, gpu_number):
             X = [x.cuda(gpu_number) for x in X]
             Y = Y.cuda(gpu_number)
         prediction = model(X)
-        loss += F.cross_entropy(prediction, Y, reduction='sum').item()
+        loss += loss_fn(prediction, Y, reduction='sum').item()
         prediction = prediction.data.max(1, keepdim=True)[1]
         correct += prediction.eq(Y.data.view_as(prediction)).cpu().sum()
     data_len = num_batches * batch_size

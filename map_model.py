@@ -18,3 +18,45 @@ class MapResNet50(nn.Module):
 
     def name(self):
        return "MapResNet50"
+       
+class MapEdLeNet(nn.Module):
+    """docstring for MapEdLeNet"""
+    def __init__(self, num_outputs):
+        super(MapEdLeNet, self).__init__()
+        self.features = nn.Sequential(
+            nn.Conv2d(1, 32, kernel_size=5, bias=False),
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
+            nn.Dropout2d(0.5),
+            nn.MaxPool2d(kernel_size=2),
+            nn.Conv2d(32, 64, kernel_size=5, bias=False),
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+            nn.Dropout2d(0.5),
+            nn.MaxPool2d(kernel_size=2),
+            nn.Conv2d(64, 128, kernel_size=3, bias=False),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+            nn.Dropout2d(0.5),
+            nn.MaxPool2d(kernel_size=2)
+        )
+        
+        self.classifier = nn.Sequential(
+           nn.Dropout(0.5),
+           nn.Linear(128 * 5 * 5, 256),
+           nn.ReLU(),
+           nn.Dropout(0.5),
+           nn.Linear(256, 128),
+           nn.ReLU(),
+           #nn.Dropout(0.5),
+           nn.Linear(128, num_outputs)
+         )
+        
+
+    def forward(self, x):
+        x = self.features(x)
+        x = self.classifier(x)
+        return x
+
+    def name(self):
+        return "MapEdLeNet"

@@ -27,7 +27,7 @@ class MainModel(nn.Module):
         self.model3 = m[2]
         #self.model4 = m[3]
         self.fc = nn.Sequential(
-                                nn.Dropout(p=0.5)
+                                nn.Dropout(p=0.5),
                                 nn.Linear(inputs, 2048),
                                  nn.Linear(2048, 512),
                                  nn.Linear(512,128),

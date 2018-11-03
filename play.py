@@ -97,6 +97,7 @@ if __name__ == "__main__":
 
     print("Creating Model Graph")
     model = MainModel(config['model_dict'],5)
+    model.eval()
     print("Model Created successfully")
     
     if len(sys.argv) < 2:
