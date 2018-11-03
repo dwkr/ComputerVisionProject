@@ -25,8 +25,10 @@ class MainModel(nn.Module):
         self.model1 = m[0]
         self.model2 = m[1]
         self.model3 = m[2]
-        self.model4 = m[3]
-        self.fc = nn.Sequential(nn.Linear(inputs, 2048),
+        #self.model4 = m[3]
+        self.fc = nn.Sequential(
+                                nn.Dropout(p=0.5)
+                                nn.Linear(inputs, 2048),
                                  nn.Linear(2048, 512),
                                  nn.Linear(512,128),
                                  nn.Linear(128,num_classes))
@@ -35,8 +37,8 @@ class MainModel(nn.Module):
         x1 = self.model1(x[0])
         x2 = self.model2(x[1])
         x3 = self.model3(x[2])
-        x4 = self.model4(x[3])
-        x = torch.cat((x1,x2,x3,x4),dim = -1)
+        #x4 = self.model4(x[3])
+        x = torch.cat((x1,x2,x3),dim = -1)
         x = self.fc(x)
         return x
 

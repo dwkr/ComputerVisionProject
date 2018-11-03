@@ -15,7 +15,7 @@ import json
 import sys
 from main_model import MainModel
 
-with open("config.json",'r') as file:
+with open("config2.json",'r') as file:
     config = json.load(file)
 
 parser = argparse.ArgumentParser(description="Autonomous Driving for GTA 5")
@@ -101,12 +101,6 @@ logging.info(args)
 if(args.train_ratio + args.test_ratio + args.validation_ratio != 1.0):
     raise ValueError('Sum of Train, Test and Validation Ratios must be 1.0')
 
-def selectModel():
-    if args.model == "SimpleConvNet":
-        return models.SimpleConvNet(9)
-    if args.model == "AlexNet":
-        return models.AlexNet(9)
-
 def load_data(input_path, balance, shuffe_data = True):
     logging.info("Reading files from {}".format(input_path))
     files = glob.glob(input_path)
@@ -128,7 +122,7 @@ def load_data(input_path, balance, shuffe_data = True):
         logging.info("Data Stats for balanced data: {}".format(stats_data))
     else:
         logging.info("Not Balancing Data")
-        stats_data = gen_stats(data)
+        stats_data = gen_stats(all_data)
         logging.info("Data Stats for unblanced data: {}".format(stats_data))
 
     if(shuffe_data):

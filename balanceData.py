@@ -10,7 +10,6 @@ def distribute_data(data):
     no_action = []
 
     for d in data:
-        #print("D type",type(d))
         if d[1] == keysW:
             straight.append(d)
         elif d[1] == keysWA or d[1] == keysA:
