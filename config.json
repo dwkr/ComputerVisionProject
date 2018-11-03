@@ -1,6 +1,6 @@
 {
     "num_epochs": 100,
-    "batch_size":64,
+    "batch_size": 32,
     "gpu": true,
     "gpu_number": 0,
     "balance": false,
@@ -19,10 +19,10 @@
     "seed": 7,
     "model": "MainModel",
     "model_dict": {
-                    "Image_Xception": [3,2048],
-                    "MapResNet50": [1,512],
-                    "SpeedResNet50": [1,512],
-                    "HistoryModel": [500,256]
-                    }
+                    "Image_Xception": [3,1024],
+                    "MapResNet50": [1,64],
+                    "SpeedResNet50": [1,64]
+                    },
+    "loss_weights": [1,1,1,1,1]
 
 }

@@ -21,7 +21,7 @@ class MapResNet50(nn.Module):
        
 class MapEdLeNet(nn.Module):
     """docstring for MapEdLeNet"""
-    def __init__(self, num_outputs):
+    def __init__(self,num_inputs, num_outputs):
         super(MapEdLeNet, self).__init__()
         self.features = nn.Sequential(
             nn.Conv2d(1, 32, kernel_size=5, bias=False),
