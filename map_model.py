@@ -42,19 +42,19 @@ class MapEdLeNet(nn.Module):
         )
         
         self.classifier = nn.Sequential(
-           nn.Dropout(0.5),
            nn.Linear(128 * 5 * 5, 256),
            nn.ReLU(),
            nn.Dropout(0.5),
            nn.Linear(256, 128),
            nn.ReLU(),
-           #nn.Dropout(0.5),
            nn.Linear(128, num_outputs)
          )
         
 
     def forward(self, x):
         x = self.features(x)
+        x = x.view(-1, 128 * 5 * 5)
+        #print("X Ki Shape : ", x.shape)
         x = self.classifier(x)
         return x
 

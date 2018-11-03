@@ -4,28 +4,22 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
 import torchvision
-from functools import partial
-
-loss_fn = F.cross_entropy
-def updateLossWeights(weights = [1,1,1,1,1]):
-    weights = torch.Tensor(weights).type(torch.FloatTensor)
-    global loss_fn 
-    loss_fn = partial(F.cross_entropy, weight= weights)
 
 def convert_to_torch_tensor(data_X, data_Y):
     
     X, Y = [torch.from_numpy(x) for x in data_X], torch.from_numpy(data_Y)
     return X, Y
 
-def train(logging, model, data_X, data_Y, validation_data_X, validation_data_Y, n_epochs, learning_rate, GPU, gpu_number, model_save_path, print_after_every = 2, validate_after_every = 2, save_after_every = 2):
+def train(logging, model, weight, data_X, data_Y, validation_data_X, validation_data_Y, n_epochs, learning_rate, GPU, gpu_number, model_save_path, print_after_every = 2, validate_after_every = 2, save_after_every = 2):
     USE_CUDA = torch.cuda.device_count() >= 1 and GPU
-            
+    weight_tensor = torch.Tensor(weight).type(torch.FloatTensor)    
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     model.train()
     data_X, data_Y = convert_to_torch_tensor(data_X, data_Y)
 
     if USE_CUDA:
         model = model.cuda(gpu_number)
+        weight_tensor = weight_tensor.cuda(gpu_number)
 
     num_batches = data_X[0].shape[0]
 
@@ -38,7 +32,7 @@ def train(logging, model, data_X, data_Y, validation_data_X, validation_data_Y, 
                 Y = Y.cuda(gpu_number)
             optimizer.zero_grad()
             prediction = model(X)
-            loss = loss_fn(prediction, Y)
+            loss = F.cross_entropy(prediction, Y, weight = weight_tensor)
             loss.backward()
             optimizer.step()
             if batch_idx % print_after_every == 0:
@@ -48,7 +42,7 @@ def train(logging, model, data_X, data_Y, validation_data_X, validation_data_Y, 
         if epoch % validate_after_every == 0:
             if validation_data_X[0].shape[0] * validation_data_X[0].shape[1] > 0:
                 logging.info('Testing on Validation Set')
-                test(logging, model, validation_data_X, validation_data_Y, GPU, gpu_number)
+                test(logging, model, weight, validation_data_X, validation_data_Y, GPU, gpu_number)
             else:
                 logging.info("Validation Set Size = 0, not validating")
 
@@ -62,13 +56,15 @@ def train(logging, model, data_X, data_Y, validation_data_X, validation_data_Y, 
                 torch.save(model.state_dict(), model_save_file)
             logging.info("Model saved Successfully")
 
-def test(logging, model, data_X, data_Y, GPU, gpu_number):
+def test(logging, model, weight, data_X, data_Y, GPU, gpu_number):
     USE_CUDA = torch.cuda.device_count() >= 1 and GPU
+    weight = torch.Tensor(weight).type(torch.FloatTensor)    
     model.eval()
     data_X, data_Y = convert_to_torch_tensor(data_X, data_Y)
 
     if USE_CUDA:
         model = model.cuda(gpu_number)
+        weight_tensor = weight_tensor.cuda(gpu_number)
 
     loss= 0
     correct = 0
@@ -81,7 +77,7 @@ def test(logging, model, data_X, data_Y, GPU, gpu_number):
             X = [x.cuda(gpu_number) for x in X]
             Y = Y.cuda(gpu_number)
         prediction = model(X)
-        loss += loss_fn(prediction, Y, reduction='sum').item()
+        loss += F.cross_entropy(prediction, Y, weight = weight_tensor, reduction='sum').item()
         prediction = prediction.data.max(1, keepdim=True)[1]
         correct += prediction.eq(Y.data.view_as(prediction)).cpu().sum()
     data_len = num_batches * batch_size

@@ -7,7 +7,7 @@ from visualizeData import visualize_raw_data, visualize_batch_data
 import random
 from random import shuffle
 import models
-from train import train, test, updateLossWeights
+from train import train, test
 import logging
 from datetime import datetime
 from extract_features import getFeatures
@@ -15,7 +15,7 @@ import json
 import sys
 from main_model import MainModel
 
-with open("config.json",'r') as file:
+with open("config2.json",'r') as file:
     config = json.load(file)
 
 parser = argparse.ArgumentParser(description="Autonomous Driving for GTA 5")
@@ -170,20 +170,18 @@ def train_AI(input_path, model_save_path):
     logging.info("Creating Model Graph")
     model = getattr(sys.modules[__name__],args.model)(config['model_dict'],5)
     logging.info("Model Created successfully")
-    
-    updateLossWeights(config['loss_weights'])
 
     logging.info("Starting Training")
-    train(logging, model, train_data_X, train_data_Y, validation_data_X, validation_data_Y,  args.num_epochs, args.lr, args.gpu, args.gpu_number, args.save_model, args.print_after, args.validate_after, args.save_after)
+    train(logging, model, config['loss_weights'], train_data_X, train_data_Y, validation_data_X, validation_data_Y,  args.num_epochs, args.lr, args.gpu, args.gpu_number, args.save_model, args.print_after, args.validate_after, args.save_after)
     logging.info("Training Completed")
     
     if(validation_data_X.shape[0] * validation_data_X.shape[1] > 0):
         logging.info("Testing on Validation Set")
-        test(logging, model, validation_data_X, validation_data_Y, args.gpu)
+        test(logging, model, config['loss_weights'], validation_data_X, validation_data_Y, args.gpu)
     
     if( test_data_X.shape[0] * test_data_X.shape[1] > 0):
         logging.info("Testing on Test Set")
-        test(logging, model, test_data_X, test_data_Y, args.gpu, args.gpu_number)
+        test(logging, model, config['loss_weights'], test_data_X, test_data_Y, args.gpu, args.gpu_number)
 
 
 if __name__ == "__main__":

@@ -1,18 +1,18 @@
 {
     "num_epochs": 100,
-    "batch_size": 32,
+    "batch_size":32,
     "gpu": true,
     "gpu_number": 0,
     "balance": false,
     "shuffle_data": true,
-    "lr": 4e-3,
-    "train_ratio": 0.7,
-    "validation_ratio": 0.2,
-    "test_ratio": 0.1,
-    "train_data": "D:\\data\\train_data_125.npy",
-    "save_model": "./models/",
-    "log_dir": "./logs/",
-    "print": true,
+    "lr": 0.001,
+    "train_ratio": 0.9,
+    "validation_ratio": 0.05,
+    "test_ratio": 0.05,
+    "train_data": "/data/ra2630/CV/Project/input/train_data_*.npy",
+    "save_model": "/data/ra2630/CV/Project/models/unbalanced",
+    "log_dir": "/data/ra2630/CV/Project/logs/",
+    "print": false,
     "print_after": 1,
     "validate_after":1,
     "save_after":1,
@@ -20,9 +20,9 @@
     "model": "MainModel",
     "model_dict": {
                     "Image_Xception": [3,1024],
-                    "MapResNet50": [1,64],
-                    "SpeedResNet50": [1,64]
+                    "MapEdLeNet": [1,64],
+                    "SpeedEdLeNet": [1,64]
                     },
-    "loss_weights": [1,1,1,1,1]
+    "loss_weights": [1.5, 3, 3, 1, 1]
 
 }
