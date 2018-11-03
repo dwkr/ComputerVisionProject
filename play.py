@@ -10,22 +10,25 @@ import sys
 import time
 import random
 from extract_features import extractMap, extractSpeed, restrictFOV
+import json
+import torch
 
 with open("config.json",'r') as file:
     config = json.load(file)
 
 max_last_hundred = 100
 last_hundred = []
+zero = [0,0,0,0,0]
 for i in range(max_last_hundred):
-    last_hundred.append(keysR)
+    last_hundred.append(random.choice([keysW,keysS,keysA,keysD,keysR]))
 
 
 def get_input_from_screen():
     screen = np.array(ImageGrab.grab(bbox=(0,40,800,640)), dtype=np.float32)[:,:,0:3]
     screen = cv2.resize(screen, (299, 299))
-    road_map = extractMap(screen)
-    speed = extractSpeed(screen)
-    image_fov = restrictFOV(screen)
+    road_map = extractMap(screen).astype(dtype=np.float32).reshape(1,1,64,64)
+    speed = extractSpeed(screen).astype(dtype=np.float32).reshape(1,1,64,64)
+    image_fov = restrictFOV(screen).reshape(1,3,299,299)
 
     return torch.from_numpy(image_fov), torch.from_numpy(road_map), torch.from_numpy(speed)
 
@@ -78,7 +81,7 @@ def play_GTA(model):
         if paused:
             continue
         x1, x2, x3 = get_input_from_screen()
-        x4 = torch.from_numpy(np.array(last_hundred).reshape((100,5)))
+        x4 = torch.from_numpy(np.array(last_hundred).astype(dtype=np.float32).reshape((1,100,5)))
         prediction = model([x1, x2, x3, x4])
         key_pressed = perform_action(prediction.max(1)[1].numpy()[0])
         last_action = [0,0,0,0,0]

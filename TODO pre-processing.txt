@@ -3,3 +3,5 @@
 3) sky removal
 4) speed recovery
 5) convert BGR to RGB while training
+6) image normalisation
+7) normalisation in between
