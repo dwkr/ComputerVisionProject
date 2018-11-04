@@ -34,7 +34,7 @@ def train(logging, model, weight, data_X, data_Y, validation_data_X, validation_
                 Y = Y.cuda(gpu_number)
             optimizer.zero_grad()
             prediction = model(X)
-            confMatrix.add(prediction,Y)
+            confMatrix.add(prediction.clone().detach(),Y.clone().detach())
             loss = F.cross_entropy(prediction, Y, weight = weight_tensor)
             loss.backward()
             optimizer.step()
@@ -83,7 +83,7 @@ def test(logging, model, weight, data_X, data_Y, GPU, gpu_number):
             X = [x.cuda(gpu_number) for x in X]
             Y = Y.cuda(gpu_number)
         prediction = model(X)
-        confMatrix.add(prediction,Y)
+        confMatrix.add(prediction.clone().detach(),Y.clone().detach())
         loss += F.cross_entropy(prediction, Y, weight = weight_tensor, reduction='sum').item()
         prediction = prediction.data.max(1, keepdim=True)[1]
         correct += prediction.eq(Y.data.view_as(prediction)).cpu().sum()

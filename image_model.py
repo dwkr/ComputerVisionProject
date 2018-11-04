@@ -21,10 +21,12 @@ class ImageResNet50(nn.Module):
     def __init__(self,num_inputs, num_outputs):
        super(ImageResNet50, self).__init__()
        self.model = models.resnet50()
+       self.avgPoool = nn.AvgPool2d(76, stride=1)
        self.model.conv1 = nn.Conv2d(num_inputs, 64, kernel_size=(7,7), stride=(2, 2), padding=(3, 3), bias=False)
        self.model.fc = nn.Linear(in_features=2048, out_features=num_outputs, bias=True)
 
     def forward(self, x):
+       x = self.avgPoool(x)
        x = self.model(x)
        return x
 
@@ -36,10 +38,12 @@ class ImageResNet101(nn.Module):
     def __init__(self,num_inputs, num_outputs):
        super(ImageResNet101, self).__init__()
        self.model = models.resnet101()
+       self.avgPoool = nn.AvgPool2d(76, stride=1)
        self.model.conv1 = nn.Conv2d(num_inputs, 64, kernel_size=(7,7), stride=(2, 2), padding=(3, 3), bias=False)
        self.model.fc = nn.Linear(in_features=2048, out_features=num_outputs, bias=True)
 
     def forward(self, x):
+       x = self.avgPoool(x)
        x = self.model(x)
        return x
 
@@ -51,10 +55,12 @@ class ImageDenseNet121(nn.Module):
     def __init__(self,num_inputs, num_outputs):
        super(ImageDenseNet121, self).__init__()
        self.model = models.densenet121()
+       self.avgPoool = nn.AvgPool2d(76, stride=1)
        self.model.features.conv0 = nn.Conv2d(num_inputs, 64, kernel_size=(7,7), stride=(2, 2), padding=(3, 3), bias=False)
        self.model.classifier = nn.Linear(in_features=1024, out_features=num_outputs, bias=True)
 
     def forward(self, x):
+       x = self.avgPoool(x)
        x = self.model(x)
        return x
 
