@@ -58,7 +58,7 @@ def train(logging, model, weight, data_X, data_Y, validation_data_X, validation_
 
 def test(logging, model, weight, data_X, data_Y, GPU, gpu_number):
     USE_CUDA = torch.cuda.device_count() >= 1 and GPU
-    weight = torch.Tensor(weight).type(torch.FloatTensor)    
+    weight_tensor = torch.Tensor(weight).type(torch.FloatTensor)    
     model.eval()
     data_X, data_Y = convert_to_torch_tensor(data_X, data_Y)
 
