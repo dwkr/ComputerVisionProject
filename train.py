@@ -4,6 +4,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
 import torchvision
+import torchnet as tnt
 
 def convert_to_torch_tensor(data_X, data_Y):
     
@@ -24,6 +25,7 @@ def train(logging, model, weight, data_X, data_Y, validation_data_X, validation_
     num_batches = data_X[0].shape[0]
 
     for epoch in range(n_epochs):
+        confMatrix = tnt.meter.ConfusionMeter(5)
         for batch_idx in range(num_batches):
             X = [x[batch_idx] for x in data_X] 
             Y = torch.max(Variable(data_Y[batch_idx]), 1)[1]
@@ -32,6 +34,7 @@ def train(logging, model, weight, data_X, data_Y, validation_data_X, validation_
                 Y = Y.cuda(gpu_number)
             optimizer.zero_grad()
             prediction = model(X)
+            confMatrix.add(prediction,Y)
             loss = F.cross_entropy(prediction, Y, weight = weight_tensor)
             loss.backward()
             optimizer.step()
@@ -39,6 +42,8 @@ def train(logging, model, weight, data_X, data_Y, validation_data_X, validation_
                 logging.info('Train Epoch: {} Batch Index: {} Total Number of Batches: {} \tLoss: {:.6f}'.format(
                     epoch, batch_idx , num_batches, loss.item()))
 
+        logging.info('\nConfusion Matrix on Train for epoch {} \n {}\n'.format(epoch,
+                        confMatrix.value()))
         if epoch % validate_after_every == 0:
             if validation_data_X[0].shape[0] * validation_data_X[0].shape[1] > 0:
                 logging.info('Testing on Validation Set')
@@ -68,6 +73,7 @@ def test(logging, model, weight, data_X, data_Y, GPU, gpu_number):
 
     loss= 0
     correct = 0
+    confMatrix = tnt.meter.ConfusionMeter(5)
     num_batches = data_X[0].shape[0]
     batch_size = data_X[0].shape[1]
     for batch_idx in range(num_batches):
@@ -77,6 +83,7 @@ def test(logging, model, weight, data_X, data_Y, GPU, gpu_number):
             X = [x.cuda(gpu_number) for x in X]
             Y = Y.cuda(gpu_number)
         prediction = model(X)
+        confMatrix.add(prediction,Y)
         loss += F.cross_entropy(prediction, Y, weight = weight_tensor, reduction='sum').item()
         prediction = prediction.data.max(1, keepdim=True)[1]
         correct += prediction.eq(Y.data.view_as(prediction)).cpu().sum()
@@ -85,6 +92,8 @@ def test(logging, model, weight, data_X, data_Y, GPU, gpu_number):
     logging.info('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.4f}%)\n'.format(
         loss, correct, data_len,
         100.0 * float(correct) / data_len))
+    logging.info('\nConfusion Matrix on Test {}\n'.format(
+        confMatrix.value()))
 
 
 
