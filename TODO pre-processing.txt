@@ -1,7 +1,3 @@
 1) check vis_map in whole data.
-2) Hood removal
-3) sky removal
-4) speed recovery
-5) convert BGR to RGB while training
-6) image normalisation
-7) normalisation in between
+2) image normalisation
+3) normalisation in between
