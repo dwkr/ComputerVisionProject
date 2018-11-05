@@ -218,7 +218,7 @@ def train_AI_with_loaders(input_path, model_save_path):
     
     if(validation_data_X.shape[0] * validation_data_X.shape[1] > 0):
         logging.info("Testing on Validation Set")
-        test_with_loader(logging, model, config['loss_weights'], val_loader, args.gpu)
+        test_with_loader(logging, model, config['loss_weights'], val_loader, args.gpu, args.gpu_number)
     
     if( test_data_X.shape[0] * test_data_X.shape[1] > 0):
         logging.info("Testing on Test Set")

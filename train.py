@@ -133,7 +133,7 @@ def train_with_loader(logging, model, weight, train_loader, val_loader, n_epochs
         if epoch % validate_after_every == 0:
             if len(val_loader) > 0:
                 logging.info('Testing on Validation Set')
-                test(logging, model, weight, val_loader, GPU, gpu_number)
+                test_with_loader(logging, model, weight, val_loader, GPU, gpu_number)
             else:
                 logging.info("Validation Set Size = 0, not validating")
 
@@ -162,7 +162,7 @@ def test_with_loader(logging, model, weight, test_loader, GPU, gpu_number):
     confMatrix = tnt.meter.ConfusionMeter(5)
     num_batches = len(test_laoder)
     batch_size = 32
-    for batch_idx (X, Y) in enumerate(test_loader):
+    for batch_idx, (X, Y) in enumerate(test_loader):
         #X = [x[batch_idx] for x in data_X]
         Y = torch.max(Variable(data_Y[batch_idx]), 1)[1]
         if USE_CUDA:
