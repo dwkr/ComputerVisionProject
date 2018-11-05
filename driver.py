@@ -7,15 +7,17 @@ from visualizeData import visualize_raw_data, visualize_batch_data
 import random
 from random import shuffle
 import models
-from train import train, test
+from train import train, test, train_with_loader, test_with_loader
 import logging
 from datetime import datetime
 from extract_features import getFeatures
 import json
 import sys
 from main_model import MainModel
+from GTA_data_set import GTADataset
+import torch
 
-with open("config2.json",'r') as file:
+with open("config.json",'r') as file:
     config = json.load(file)
 
 parser = argparse.ArgumentParser(description="Autonomous Driving for GTA 5")
@@ -140,7 +142,7 @@ def create_sets(data, train_ratio, validation_ratio, test_ratio):
     test_data = data[train_len+validation_len : ]
 
     return train_data, validation_data, test_data
-
+ 
 def create_batches(data, batch_size):
     n_batches = int(math.floor(len(data)/batch_size))
     data = data[:n_batches*batch_size]
@@ -182,9 +184,48 @@ def train_AI(input_path, model_save_path):
     if( test_data_X.shape[0] * test_data_X.shape[1] > 0):
         logging.info("Testing on Test Set")
         test(logging, model, config['loss_weights'], test_data_X, test_data_Y, args.gpu, args.gpu_number)
+        
+        
+    
+def create_loader_sets(data, train_ratio, validation_ratio, test_ratio):
+    train_len = int(len(data) * train_ratio)
+    validation_len = int(len(data) * validation_ratio)
+
+    train_dataset = GTADataset(data,0)
+    validation_dataset = GTADataset(data, train_len)
+    test_dataset = GTADataset(data, train_len + validation_len)
+
+    return train_dataset, validation_dataset, test_dataset   
+    
+def train_AI_with_loaders(input_path, model_save_path):
+    data = load_data(input_path, balance = args.balance, shuffe_data = args.shuffle_data)
+    train_dataset, val_dataset, test_dataset = create_loader_sets(data, args.train_ratio, args.validation_ratio, args.test_ratio)
+    train_loader = torch.utils.data.DataLoader(train_dataset,batch_size = args.batch_size, shuffle = True, num_workers = 1)
+    val_loader = torch.utils.data.DataLoader(val_dataset,batch_size = args.batch_size, shuffle = False, num_workers = 1)
+    test_loader = torch.utils.data.DataLoader(test_dataset,batch_size = args.batch_size, shuffle = False, num_workers = 1)
+    
+    logging.info("Number of Training Examples : {}".format(len(train_dataset)))
+    logging.info("Number of Validation Examples : {}".format(len(val_dataset)))
+    logging.info("Number of Test Examples : {}".format(len(test_dataset)))
+
+    logging.info("Creating Model Graph")
+    model = getattr(sys.modules[__name__],args.model)(config['model_dict'],5)
+    logging.info("Model Created successfully")
+
+    logging.info("Starting Training")
+    train_with_loader(logging, model, config['loss_weights'], train_loader, val_loader,  args.num_epochs, args.lr, args.gpu, args.gpu_number, args.save_model, args.print_after, args.validate_after, args.save_after)
+    logging.info("Training Completed")
+    
+    if(validation_data_X.shape[0] * validation_data_X.shape[1] > 0):
+        logging.info("Testing on Validation Set")
+        test_with_loader(logging, model, config['loss_weights'], val_loader, args.gpu)
+    
+    if( test_data_X.shape[0] * test_data_X.shape[1] > 0):
+        logging.info("Testing on Test Set")
+        test_with_loader(logging, model, config['loss_weights'], test_loader, args.gpu, args.gpu_number)
 
 
 if __name__ == "__main__":
 
-    train_AI(args.train_data, args.save_model)
+    train_AI_with_loaders(args.train_data, args.save_model)
 
