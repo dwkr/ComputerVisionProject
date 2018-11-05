@@ -191,9 +191,9 @@ def create_loader_sets(data, train_ratio, validation_ratio, test_ratio):
     train_len = int(len(data) * train_ratio)
     validation_len = int(len(data) * validation_ratio)
 
-    train_dataset = GTADataset(data,0)
-    validation_dataset = GTADataset(data, train_len)
-    test_dataset = GTADataset(data, train_len + validation_len)
+    train_dataset = GTADataset(data,0, train_ratio)
+    validation_dataset = GTADataset(data, len(train_dataset), validation_ratio)
+    test_dataset = GTADataset(data, len(train_dataset) + len(validation_dataset), test_ratio)
 
     return train_dataset, validation_dataset, test_dataset   
     

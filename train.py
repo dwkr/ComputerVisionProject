@@ -160,11 +160,11 @@ def test_with_loader(logging, model, weight, test_loader, GPU, gpu_number):
     loss= 0
     correct = 0
     confMatrix = tnt.meter.ConfusionMeter(5)
-    num_batches = len(test_laoder)
+    num_batches = len(test_loader)
     batch_size = 32
     for batch_idx, (X, Y) in enumerate(test_loader):
         #X = [x[batch_idx] for x in data_X]
-        Y = torch.max(Variable(data_Y[batch_idx]), 1)[1]
+        Y = torch.max(Variable(Y), 1)[1]
         if USE_CUDA:
             X = [x.cuda(gpu_number) for x in X]
             Y = Y.cuda(gpu_number)

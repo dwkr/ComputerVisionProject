@@ -4,12 +4,13 @@ import numpy as np
 class GTADataset(data.Dataset):
     """GTA dataset"""
     
-    def __init__(self, set, offset):
+    def __init__(self, set, offset, ratio):
         self.set = set
         self.offset = offset
+        self.length = int(ratio * len(self.set))
         
     def __len__(self):
-        return len(self.set) - self.offset
+        return self.length
         
     def __getitem__(self, idx):
         X1 = np.array(self.set[self.offset + idx][0], dtype=np.float32).reshape(3,299,299)
