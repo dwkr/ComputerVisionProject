@@ -161,7 +161,7 @@ def test_with_loader(logging, model, weight, test_loader, GPU, gpu_number):
     correct = 0
     confMatrix = tnt.meter.ConfusionMeter(5)
     num_batches = len(test_loader)
-    batch_size = 32
+    batch_size = test_loader.batch_size
     for batch_idx, (X, Y) in enumerate(test_loader):
         #X = [x[batch_idx] for x in data_X]
         Y = torch.max(Variable(Y), 1)[1]
@@ -178,7 +178,7 @@ def test_with_loader(logging, model, weight, test_loader, GPU, gpu_number):
     logging.info('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.4f}%)\n'.format(
         loss, correct, data_len,
         100.0 * float(correct) / data_len))
-    logging.info('\nConfusion Matrix on Test {}\n'.format(
+    logging.info('\nConfusion Matrix on Test \n{}\n'.format(
         confMatrix.value()))
 
 

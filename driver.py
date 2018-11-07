@@ -16,6 +16,7 @@ import sys
 from main_model import MainModel
 from GTA_data_set import GTADataset
 import torch
+from find_stats import findStats
 
 with open("config.json",'r') as file:
     config = json.load(file)
@@ -82,6 +83,9 @@ parser.add_argument('--seed', default=config['seed'], type=int,
 parser.add_argument('--print', action='store_true', default=config['print'],
     help='Print Log Output to stdout')
 
+parser.add_argument('--cal_stats', action='store_true', default=config['cal_stats'],
+    help='Caclulate stats for normalisation')
+
 args = parser.parse_args()
 
 random.seed(args.seed)
@@ -147,12 +151,13 @@ def create_sets(data, train_ratio, validation_ratio, test_ratio):
  
 def create_batches(data, batch_size):
     n_batches = int(math.floor(len(data)/batch_size))
+    n_batches = len(data)
     data = data[:n_batches*batch_size]
-    X1 = np.array([i[0] for i in data], dtype=np.float32).reshape(n_batches,batch_size,3,299,299)
-    X2 = np.array([i[2] for i in data], dtype=np.float32).reshape(n_batches,batch_size,1,64,64)
-    X3 = np.array([i[3] for i in data], dtype=np.float32).reshape(n_batches,batch_size,1,64,64)
-    X4 = np.array([i[4] for i in data], dtype=np.float32).reshape(n_batches,batch_size,100,5)
-    Y = np.array([i[1] for i in data]).reshape(n_batches, batch_size, 5)
+    X1 = np.array([i[0] for i in data], dtype=np.float32).reshape(n_batches,3,299,299)
+    X2 = np.array([i[2] for i in data], dtype=np.float32).reshape(n_batches,1,64,64)
+    X3 = np.array([i[3] for i in data], dtype=np.float32).reshape(n_batches,1,64,64)
+    X4 = np.array([i[4] for i in data], dtype=np.float32).reshape(n_batches,100,5)
+    Y = np.array([i[1] for i in data]).reshape(n_batches,  5)
     return X1, X2, X3, X4, Y
 
 def train_AI(input_path, model_save_path):
@@ -162,6 +167,14 @@ def train_AI(input_path, model_save_path):
     train_data_X2, validation_data_X2, test_data_X2 = create_sets(batched_data_X2, args.train_ratio, args.validation_ratio, args.test_ratio)
     train_data_X3, validation_data_X3, test_data_X3 = create_sets(batched_data_X3, args.train_ratio, args.validation_ratio, args.test_ratio)
     train_data_X4, validation_data_X4, test_data_X4 = create_sets(batched_data_X4, args.train_ratio, args.validation_ratio, args.test_ratio)
+    
+    stats = { "X1": {"mean": np.mean(train_data_X1/255,axis=(0,2,3)), "std": np.std(train_data_X1/255,axis=(0,2,3))},
+              "X2": {"mean": np.mean(train_data_X2/255,axis=(0,2,3)), "std": np.std(train_data_X2/255,axis=(0,2,3))},
+              "X3": {"mean": np.mean(train_data_X3/255,axis=(0,2,3)), "std": np.std(train_data_X3/255,axis=(0,2,3))}
+            }
+    
+    print(stats)
+    exit()
     train_data_X = [train_data_X1, train_data_X2, train_data_X3, train_data_X4]
     validation_data_X = [validation_data_X1, validation_data_X2, validation_data_X3, validation_data_X4]
     test_data_X = [test_data_X1, test_data_X2, test_data_X3, test_data_X4]
@@ -189,27 +202,35 @@ def train_AI(input_path, model_save_path):
         
         
     
-def create_loader_sets(data, train_ratio, validation_ratio, test_ratio):
+def create_loader_sets(data, train_ratio, validation_ratio, test_ratio, stats, normalize):
     train_len = int(len(data) * train_ratio)
     validation_len = int(len(data) * validation_ratio)
 
-    train_dataset = GTADataset(data,0, train_ratio)
-    validation_dataset = GTADataset(data, len(train_dataset), validation_ratio)
-    test_dataset = GTADataset(data, len(train_dataset) + len(validation_dataset), test_ratio)
+    train_dataset = GTADataset(data,0, train_ratio, stats, normalize)
+    validation_dataset = GTADataset(data, len(train_dataset), validation_ratio, stats, normalize)
+    test_dataset = GTADataset(data, len(train_dataset) + len(validation_dataset), test_ratio, stats, normalize)
 
     return train_dataset, validation_dataset, test_dataset   
     
 def train_AI_with_loaders(input_path, model_save_path):
     data = load_data(input_path, balance = args.balance, shuffe_data = args.shuffle_data)
-    train_dataset, val_dataset, test_dataset = create_loader_sets(data, args.train_ratio, args.validation_ratio, args.test_ratio)
-    train_loader = torch.utils.data.DataLoader(train_dataset,batch_size = args.batch_size, shuffle = True, num_workers = 1)
+    
+    stat_dataset, _ ,_ = create_loader_sets(data, args.train_ratio, args.validation_ratio, args.test_ratio, None)
+    stat_loader = torch.utils.data.DataLoader(stat_dataset,batch_size = args.batch_size, shuffle = True, num_workers = 0)
+    
+    stats = findStats(stat_loader, args.cal_stats)
+    stat_dataset = None
+    stat_loader = None
+    
+    train_dataset, val_dataset, test_dataset = create_loader_sets(data, args.train_ratio, args.validation_ratio, args.test_ratio stats, True)
+    train_loader = torch.utils.data.DataLoader(train_dataset,batch_size = args.batch_size, shuffle = True, num_workers = 0)
     val_loader = torch.utils.data.DataLoader(val_dataset,batch_size = args.batch_size, shuffle = False, num_workers = 0)
     test_loader = torch.utils.data.DataLoader(test_dataset,batch_size = args.batch_size, shuffle = False, num_workers = 0)
-    
+
     logging.info("Number of Training Examples : {}".format(len(train_dataset)))
     logging.info("Number of Validation Examples : {}".format(len(val_dataset)))
     logging.info("Number of Test Examples : {}".format(len(test_dataset)))
-
+    exit()
     logging.info("Creating Model Graph")
     model = getattr(sys.modules[__name__],args.model)(config['model_dict'],5)
     logging.info("Model Created successfully")
@@ -230,4 +251,5 @@ def train_AI_with_loaders(input_path, model_save_path):
 if __name__ == "__main__":
 
     train_AI_with_loaders(args.train_data, args.save_model)
+   # train_AI(args.train_data, args.save_model)
 

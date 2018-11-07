@@ -1,17 +1,19 @@
 {
     "num_epochs": 100,
-    "batch_size":32,
+    "batch_size": 10,
     "gpu": true,
     "gpu_number": 0,
     "balance": false,
     "shuffle_data": true,
     "lr": 0.001,
-    "train_ratio": 0.9,
-    "validation_ratio": 0.05,
-    "test_ratio": 0.05,
-    "train_data": "/data/ra2630/CV/Project/input/train_data_*.npy",
-    "save_model": "/data/ra2630/CV/Project/models/unbalanced",
-    "log_dir": "/data/ra2630/CV/Project/logs/",
+    "train_ratio": 0.6,
+    "validation_ratio": 0.2,
+    "test_ratio": 0.2,
+    "train_data": "D:\\data\\train_data_1.npy",
+    "save_model": "models",
+    "log_dir": "logs/",
+    "log_name": "GTA_ResNet50_"
+    "cal_stats": false
     "print": false,
     "print_after": 1,
     "validate_after":1,
@@ -19,7 +21,7 @@
     "seed": 7,
     "model": "MainModel",
     "model_dict": {
-                    "Image_Xception": [3,1024],
+                    "ImageResNet50": [3,1024],
                     "MapEdLeNet": [1,64],
                     "SpeedEdLeNet": [1,64]
                     },
