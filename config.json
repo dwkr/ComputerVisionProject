@@ -12,8 +12,8 @@
     "train_data": "D:\\data\\train_data_1.npy",
     "save_model": "models",
     "log_dir": "logs/",
-    "log_name": "GTA_ResNet50_"
-    "cal_stats": false
+    "log_name": "GTA_ResNet50_",
+    "cal_stats": false,
     "print": false,
     "print_after": 1,
     "validate_after":1,

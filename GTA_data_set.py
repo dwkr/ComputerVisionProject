@@ -18,8 +18,8 @@ class GTADataset(data.Dataset):
         X = X/255
         
         for channel in range(X1.shape[0]):
-            X = X[channel,:,:] - stats[s]['mean'][channel]
-            X /= stats[s]['std'][channel]
+            X = X[channel,:,:] - np.array(stats[s]['mean'][channel], dtype=np.float32)
+            X /= np.array(stats[s]['std'][channel], dtype=np.float32)
 
         return X
     
@@ -30,5 +30,7 @@ class GTADataset(data.Dataset):
         X4 = np.array(self.set[self.offset + idx][4], dtype=np.float32).reshape(100,5)
         Y = np.array(self.set[self.offset + idx][1], dtype=np.float32).reshape(5)
 
-        return [normalize(X1,'X1'), normalize(X2,'X2'), normalize(X3,'X3'), X4], Y if self.normalize
-                else [X1, X2, X3, X4], Y
+        if self.normalize:
+            return [normalize(X1,'X1'), normalize(X2,'X2'), normalize(X3,'X3'), X4], Y
+        else:
+            return  [X1, X2, X3, X4], Y

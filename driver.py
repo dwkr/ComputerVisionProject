@@ -215,14 +215,14 @@ def create_loader_sets(data, train_ratio, validation_ratio, test_ratio, stats, n
 def train_AI_with_loaders(input_path, model_save_path):
     data = load_data(input_path, balance = args.balance, shuffe_data = args.shuffle_data)
     
-    stat_dataset, _ ,_ = create_loader_sets(data, args.train_ratio, args.validation_ratio, args.test_ratio, None)
+    stat_dataset, _ ,_ = create_loader_sets(data, args.train_ratio, args.validation_ratio, args.test_ratio, None, False)
     stat_loader = torch.utils.data.DataLoader(stat_dataset,batch_size = args.batch_size, shuffle = True, num_workers = 0)
     
-    stats = findStats(stat_loader, args.cal_stats)
+    stats = findStats(logging, stat_loader, args.cal_stats)
     stat_dataset = None
     stat_loader = None
     
-    train_dataset, val_dataset, test_dataset = create_loader_sets(data, args.train_ratio, args.validation_ratio, args.test_ratio stats, True)
+    train_dataset, val_dataset, test_dataset = create_loader_sets(data, args.train_ratio, args.validation_ratio, args.test_ratio, stats, True)
     train_loader = torch.utils.data.DataLoader(train_dataset,batch_size = args.batch_size, shuffle = True, num_workers = 0)
     val_loader = torch.utils.data.DataLoader(val_dataset,batch_size = args.batch_size, shuffle = False, num_workers = 0)
     test_loader = torch.utils.data.DataLoader(test_dataset,batch_size = args.batch_size, shuffle = False, num_workers = 0)
