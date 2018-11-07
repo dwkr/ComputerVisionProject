@@ -3,7 +3,6 @@ import numpy as np
 import glob
 from balanceData import balance_data, gen_stats
 import argparse
-from visualizeData import visualize_raw_data, visualize_batch_data
 import random
 from random import shuffle
 import models
