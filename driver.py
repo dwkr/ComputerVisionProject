@@ -61,6 +61,9 @@ parser.add_argument('--save_model', default=config['save_model'], type=str,
 parser.add_argument('--log_dir', default=config['log_dir'], type=str,
     help='path to directory to save logs')
 
+parser.add_argument('--log_name', default=config['log_name'], type=str,
+    help='name of the log file starting string')
+
 parser.add_argument('--model', default=config['model'], type=str,
     help='Which model to use')
 
@@ -93,7 +96,7 @@ if args.print:
     root.addHandler(ch)
 
 logging.basicConfig(level=logging.INFO,
-    filename= args.log_dir + datetime.now().strftime('GTA_%d_%m_%Y_%H_%M_%S.log'),
+    filename= args.log_dir + args.log_name + datetime.now().strftime('%d_%m_%Y_%H_%M_%S.log'),
     filemode='w',
     format='%(name)s - %(levelname)s - %(message)s'
 )
@@ -108,11 +111,10 @@ def load_data(input_path, balance, shuffe_data = True):
     files = glob.glob(input_path)
     logging.info("Number of files available : {}".format(len(files)))
     all_data = []
-    for file in files:
-        logging.info("loading file {} ".format(file))
+    for idx, file in enumerate(files):
+        logging.info("loading file {}, {}/{} loaded".format(file, idx, len(files)))
         data = np.load(file)
         features = getFeatures(data)
-        #print("Features type",type(features))
         all_data.extend(features)
 
     
@@ -201,8 +203,8 @@ def train_AI_with_loaders(input_path, model_save_path):
     data = load_data(input_path, balance = args.balance, shuffe_data = args.shuffle_data)
     train_dataset, val_dataset, test_dataset = create_loader_sets(data, args.train_ratio, args.validation_ratio, args.test_ratio)
     train_loader = torch.utils.data.DataLoader(train_dataset,batch_size = args.batch_size, shuffle = True, num_workers = 1)
-    val_loader = torch.utils.data.DataLoader(val_dataset,batch_size = args.batch_size, shuffle = False, num_workers = 1)
-    test_loader = torch.utils.data.DataLoader(test_dataset,batch_size = args.batch_size, shuffle = False, num_workers = 1)
+    val_loader = torch.utils.data.DataLoader(val_dataset,batch_size = args.batch_size, shuffle = False, num_workers = 0)
+    test_loader = torch.utils.data.DataLoader(test_dataset,batch_size = args.batch_size, shuffle = False, num_workers = 0)
     
     logging.info("Number of Training Examples : {}".format(len(train_dataset)))
     logging.info("Number of Validation Examples : {}".format(len(val_dataset)))
