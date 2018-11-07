@@ -4,22 +4,22 @@ import numpy as np
 class GTADataset(data.Dataset):
     """GTA dataset"""
     
-    def __init__(self, set, offset, ratio, stats, normalize = False):
+    def __init__(self, set, offset, ratio, stats, norm = False):
         self.set = set
         self.offset = offset
         self.length = int(ratio * len(self.set))
         self.norm_stats = stats
-        self.normalize = normalize
+        self.norm = norm
         
     def __len__(self):
         return self.length
         
-    def normalize(X, s):
+    def normalize(self, X, s):
         X = X/255
         
-        for channel in range(X1.shape[0]):
-            X = X[channel,:,:] - np.array(stats[s]['mean'][channel], dtype=np.float32)
-            X /= np.array(stats[s]['std'][channel], dtype=np.float32)
+        for channel in range(X.shape[0]):
+            X[channel,:,:] = X[channel,:,:] - np.array(self.norm_stats[s]['mean'][channel], dtype=np.float32)
+            X[channel,:,:] /= np.array(self.norm_stats[s]['std'][channel], dtype=np.float32)
 
         return X
     
@@ -30,7 +30,7 @@ class GTADataset(data.Dataset):
         X4 = np.array(self.set[self.offset + idx][4], dtype=np.float32).reshape(100,5)
         Y = np.array(self.set[self.offset + idx][1], dtype=np.float32).reshape(5)
 
-        if self.normalize:
-            return [normalize(X1,'X1'), normalize(X2,'X2'), normalize(X3,'X3'), X4], Y
+        if self.norm:
+            return [self.normalize(X1,'X1'), self.normalize(X2,'X2'), self.normalize(X3,'X3'), X4], Y
         else:
             return  [X1, X2, X3, X4], Y

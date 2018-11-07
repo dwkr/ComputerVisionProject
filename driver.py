@@ -174,7 +174,6 @@ def train_AI(input_path, model_save_path):
             }
     
     print(stats)
-    exit()
     train_data_X = [train_data_X1, train_data_X2, train_data_X3, train_data_X4]
     validation_data_X = [validation_data_X1, validation_data_X2, validation_data_X3, validation_data_X4]
     test_data_X = [test_data_X1, test_data_X2, test_data_X3, test_data_X4]
@@ -230,7 +229,7 @@ def train_AI_with_loaders(input_path, model_save_path):
     logging.info("Number of Training Examples : {}".format(len(train_dataset)))
     logging.info("Number of Validation Examples : {}".format(len(val_dataset)))
     logging.info("Number of Test Examples : {}".format(len(test_dataset)))
-    exit()
+    
     logging.info("Creating Model Graph")
     model = getattr(sys.modules[__name__],args.model)(config['model_dict'],5)
     logging.info("Model Created successfully")
