@@ -237,11 +237,11 @@ def train_AI_with_loaders(input_path, model_save_path):
     train_with_loader(logging, model, config['loss_weights'], train_loader, val_loader,  args.num_epochs, args.lr, args.gpu, args.gpu_number, args.save_model, args.print_after, args.validate_after, args.save_after)
     logging.info("Training Completed")
     
-    if(validation_data_X.shape[0] * validation_data_X.shape[1] > 0):
+    if(len(val_loader) > 0):
         logging.info("Testing on Validation Set")
         test_with_loader(logging, model, config['loss_weights'], val_loader, args.gpu, args.gpu_number)
     
-    if( test_data_X.shape[0] * test_data_X.shape[1] > 0):
+    if( len(test)loader) > 0):
         logging.info("Testing on Test Set")
         test_with_loader(logging, model, config['loss_weights'], test_loader, args.gpu, args.gpu_number)
 

@@ -12,10 +12,16 @@ import random
 from extract_features import extractMap, extractSpeed, restrictFOV
 import json
 import torch
+from GTA_data_set import GTADataset
 
 with open("config.json",'r') as file:
     config = json.load(file)
 
+with open("stats.json", 'r') as file:
+    stats = json.load(file)
+    
+normalizer_set = GTADataset([],0,0,stats)
+    
 max_last_hundred = 100
 last_hundred = []
 zero = [0,0,0,0,0]
@@ -26,11 +32,13 @@ for i in range(max_last_hundred):
 def get_input_from_screen():
     screen = np.array(ImageGrab.grab(bbox=(0,40,800,640)), dtype=np.float32)[:,:,0:3]
     screen = cv2.resize(screen, (299, 299))
+    screen = cv2.cvtColor(screen,cv2.COLOR_BGR2RGB)
+    
     road_map = extractMap(screen).astype(dtype=np.float32).reshape(1,1,64,64)
     speed = extractSpeed(screen).astype(dtype=np.float32).reshape(1,1,64,64)
     image_fov = restrictFOV(screen).reshape(1,3,299,299)
 
-    return torch.from_numpy(image_fov), torch.from_numpy(road_map), torch.from_numpy(speed)
+    return  torch.from_numpy(normalizer_set.normalize(image_fov,'X1')), torch.from_numpy(normalizer_set.normalize(road_map,'X2')), torch.from_numpy(normalizer_set.normalize(speed,'X3'))
 
 def releaseAll():
     ReleaseKey(W)
@@ -49,11 +57,11 @@ def perform_action(inp):
         return "W"
     if inp == 1:
         PressKey(A)
-        PressKey(W) if random.uniform(0,1) > 0.5 else None
+        #PressKey(W) if random.uniform(0,1) > 0.5 else None
         return "A"
     if inp == 2:
         PressKey(D)
-        PressKey(W) if random.uniform(0,1) > 0.5 else None
+        #PressKey(W) if random.uniform(0,1) > 0.5 else None
         return "D"
     if inp == 3:
         PressKey(S) if random.uniform(0,1) > 0.5 else None
@@ -82,6 +90,16 @@ def play_GTA(model):
             continue
         x1, x2, x3 = get_input_from_screen()
         x4 = torch.from_numpy(np.array(last_hundred).astype(dtype=np.float32).reshape((1,100,5)))
+        #print(x1.shape,type(x1))
+        #cv2.imshow('image',x1.detach().numpy().reshape(299,299,3))
+        #cv2.imshow('map',x2.detach().numpy().reshape(64,64,1))
+        #cv2.imshow('speed',x3.detach().numpy().reshape(64,64,1))
+        
+        #if(cv2.waitKey(25) & 0xFF == ord('q')):
+        #    cv2.destroyAllWindows()
+        #    break
+        #input("Press Enter to continue...")
+        
         prediction = model([x1, x2, x3, x4])
         key_pressed = perform_action(prediction.max(1)[1].numpy()[0])
         last_action = [0,0,0,0,0]
@@ -90,7 +108,7 @@ def play_GTA(model):
         last_hundred.pop(0)
         last_hundred.append(last_action)
         
-        print(prediction.detach().numpy()[0], "Action = ",prediction, key_pressed)
+        print(prediction.detach().numpy()[0],"\n", "Action = ", key_pressed)
 
 
 if __name__ == "__main__":
