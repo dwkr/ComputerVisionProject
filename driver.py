@@ -241,7 +241,7 @@ def train_AI_with_loaders(input_path, model_save_path):
         logging.info("Testing on Validation Set")
         test_with_loader(logging, model, config['loss_weights'], val_loader, args.gpu, args.gpu_number)
     
-    if( len(test)loader) > 0):
+    if( len(test_loader) > 0):
         logging.info("Testing on Test Set")
         test_with_loader(logging, model, config['loss_weights'], test_loader, args.gpu, args.gpu_number)
 

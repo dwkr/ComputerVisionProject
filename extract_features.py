@@ -63,5 +63,5 @@ def oneHotLastHundred(last100):
 def getFeatures(data):
     ret = []
     for d in data:
-        ret.append([restrictFOV(d[0]),d[1],extractMap(d[0]),extractSpeed(d[0]),oneHotLastHundred(d[3])])
+        ret.append([restrictFOV(d[0]),d[2],extractMap(d[0]),extractSpeed(d[0]),oneHotLastHundred(d[3])])
     return ret
