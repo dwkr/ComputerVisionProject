@@ -17,7 +17,9 @@ from GTA_data_set import GTADataset
 import torch
 from find_stats import findStats
 
-with open("config.json",'r') as file:
+config_file_path = "configs/config.json"
+
+with open(config_file_path,'r') as file:
     config = json.load(file)
 
 parser = argparse.ArgumentParser(description="Autonomous Driving for GTA 5")
@@ -103,6 +105,8 @@ if args.print:
     ch.setFormatter(formatter)
     logging.getLogger().addHandler(ch)
 
+
+logging.info("Reading config from : {}".format(config_file_path))
 
 logging.info(args)
 

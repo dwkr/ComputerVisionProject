@@ -22,10 +22,7 @@ class MainModel(nn.Module):
             inputs += val[1]
 
 
-        self.model1 = m[0]
-        self.model2 = m[1]
-        self.model3 = m[2]
-        #self.model4 = m[3]
+        self.models = m
         self.fc = nn.Sequential(
                                 nn.Dropout(p=0.5),
                                 nn.Linear(inputs, 2048),
@@ -37,11 +34,13 @@ class MainModel(nn.Module):
                                  nn.Linear(128,num_classes))
 
     def forward(self, x):
-        x1 = self.model1(x[0])
-        x2 = self.model2(x[1])
-        x3 = self.model3(x[2])
-        #x4 = self.model4(x[3])
-        x = torch.cat((x1,x2,x3),dim = -1)
+        output = []
+        for idx, model in enumerate(self.models):
+            output.append(model(x[idx]))
+       
+        x = torch.cat(output,dim = -1)
+
+
         x = self.fc(x)
         return x
 
