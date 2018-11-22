@@ -1,6 +1,6 @@
 {
-    "num_epochs": 100,
-    "batch_size": 10,
+    "num_epochs": 50,
+    "batch_size": 32,
     "gpu": true,
     "gpu_number": 0,
     "balance": false,
@@ -9,10 +9,10 @@
     "train_ratio": 0.6,
     "validation_ratio": 0.2,
     "test_ratio": 0.2,
-    "train_data": "D:\\data\\train_data_1.npy",
-    "save_model": "models",
-    "log_dir": "logs/",
-    "log_name": "GTA_ResNet50_",
+    "train_data": "/data/cvision_fa18/ra2630/Project/data/train_data_1.npy",
+    "save_model": "/data/cvision_fa18/ra2630/Project/models/Test",
+    "log_dir": "/data/cvision_fa18/ra2630/Project/logs/",
+    "log_name": "GTA_ResNet50_MultiLabel_unbal_test",
     "cal_stats": false,
     "print": false,
     "print_after": 1,
@@ -21,10 +21,10 @@
     "seed": 7,
     "model": "MainModel",
     "model_dict": {
-                    "ImageResNet50": [3,1024],
+                    "ImageSqueezeNet": [3,1024],
                     "MapEdLeNet": [1,64],
                     "SpeedEdLeNet": [1,64]
                     },
-    "loss_weights": [1.5, 3, 3, 1, 1]
+    "loss_weights": [1, 1, 1, 1, 1]
 
 }

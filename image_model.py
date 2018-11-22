@@ -66,3 +66,23 @@ class ImageDenseNet121(nn.Module):
 
     def name(self):
        return "ImageDenseNet121"
+
+
+class ImageSqueezeNet(nn.Module):
+    """docstring for ImageSqueezeNet"""
+    def __init__(self,num_inputs, num_outputs):
+       super(ImageSqueezeNet, self).__init__()
+       self.model = models.squeezenet1_1(num_classes = num_outputs)
+       #self.model.classifier[3] = nn.AvgPool2d(kernel_size=18, stride=1, padding=0)
+
+    def forward(self, x):
+       x = self.model.features(x)
+       x = self.model.classifier(x) # x--> 32 X 1024 X 5 X 5
+       x = nn.AvgPool2d(kernel_size=6, stride=1, padding=0)(x)
+       x = x.view(x.size(0), 1024)
+       return x
+
+    def name(self):
+       return "ImageSqueezeNet"
+
+

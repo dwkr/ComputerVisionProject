@@ -29,8 +29,11 @@ class MainModel(nn.Module):
         self.fc = nn.Sequential(
                                 nn.Dropout(p=0.5),
                                 nn.Linear(inputs, 2048),
+                                nn.ReLU(),
                                  nn.Linear(2048, 512),
+                                 nn.ReLU(),
                                  nn.Linear(512,128),
+                                 nn.ReLU(),
                                  nn.Linear(128,num_classes))
 
     def forward(self, x):
