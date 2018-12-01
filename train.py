@@ -35,8 +35,6 @@ def trainer(logging, model, weight, train_loader, val_loader, n_epochs, learning
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
     if USE_CUDA:
-        for m in model.models: #Moving individual models inside list to GPU
-            m = m.cuda(gpu_number)
         model = model.cuda(gpu_number)
 
     for epoch in range(1, n_epochs+1):

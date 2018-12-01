@@ -16,13 +16,11 @@ class MainModel(nn.Module):
         super(MainModel, self).__init__()
 
         inputs = 0
-        m = []
+        self.models = nn.ModuleList()
         for key, val in model_dict.items():
-            m.append(getattr(sys.modules[__name__],key)(val[0],val[1]))
+            self.models.append(getattr(sys.modules[__name__],key)(val[0],val[1]))
             inputs += val[1]
 
-
-        self.models = m
         self.fc = nn.Sequential(
                                 nn.Dropout(p=0.5),
                                 nn.Linear(inputs, 2048),
