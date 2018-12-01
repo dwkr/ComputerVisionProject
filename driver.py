@@ -16,6 +16,7 @@ from main_model import MainModel
 from GTA_data_set import GTADataset
 import torch
 from find_stats import findStats
+import pprint
 
 config_file_path = "configs/config.json"
 
@@ -107,6 +108,8 @@ if args.print:
 
 
 logging.info("Reading config from : {}".format(config_file_path))
+
+logging.info("Config : {}".format(json.dumps(config, indent=4)))
 
 logging.info(args)
 
