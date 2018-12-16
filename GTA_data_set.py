@@ -24,7 +24,7 @@ class GTADataset(data.Dataset):
         return X
     
     def __getitem__(self, idx):
-        X1 = np.array(self.set[self.offset + idx][0], dtype=np.float32).reshape(3,299,299)
+        X1 = np.array(self.set[self.offset + idx][0], dtype=np.float32).reshape(3,224,224)
         X2 = np.array(self.set[self.offset + idx][2], dtype=np.float32).reshape(1,64,64)
         X3 = np.array(self.set[self.offset + idx][3], dtype=np.float32).reshape(1,64,64)
         X4 = np.array(self.set[self.offset + idx][4], dtype=np.float32).reshape(100,5)

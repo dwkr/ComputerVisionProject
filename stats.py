@@ -28,4 +28,4 @@ def load_data(input_path, balance, shuffe_data = True):
     return stats
 
 if __name__ == "__main__":
-    print(load_data("D:\\data\\train_data_???.npy",balance=True))
+    print(load_data("/data/cvision_fa18/ra2630/Project/data/train_data_*.npy",balance=True))

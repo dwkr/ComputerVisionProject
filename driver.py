@@ -6,7 +6,7 @@ import argparse
 import random
 from random import shuffle
 import models
-from train import train, test, train_with_loader, test_with_loader
+from train import test_with_loader, trainer
 import logging
 from datetime import datetime
 from extract_features import getFeatures
@@ -16,8 +16,11 @@ from main_model import MainModel
 from GTA_data_set import GTADataset
 import torch
 from find_stats import findStats
+import pprint
 
-with open("config.json",'r') as file:
+config_file_path = "configs/config.json"
+
+with open(config_file_path,'r') as file:
     config = json.load(file)
 
 parser = argparse.ArgumentParser(description="Autonomous Driving for GTA 5")
@@ -90,19 +93,23 @@ args = parser.parse_args()
 random.seed(args.seed)
 
 
-if args.print:
-    ch = logging.StreamHandler(sys.stdout)
-    ch.setLevel(logging.INFO)
-    formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
-    ch.setFormatter(formatter)
-    root = logging.getLogger()
-    root.addHandler(ch)
-
 logging.basicConfig(level=logging.INFO,
     filename= args.log_dir + args.log_name + datetime.now().strftime('%d_%m_%Y_%H_%M_%S.log'),
     filemode='w',
     format='%(name)s - %(levelname)s - %(message)s'
 )
+
+if args.print:
+    ch = logging.StreamHandler(sys.stdout)
+    ch.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+    ch.setFormatter(formatter)
+    logging.getLogger().addHandler(ch)
+
+
+logging.info("Reading config from : {}".format(config_file_path))
+
+logging.info("Config : {}".format(json.dumps(config, indent=4)))
 
 logging.info(args)
 
@@ -112,6 +119,7 @@ if(args.train_ratio + args.test_ratio + args.validation_ratio != 1.0):
 def load_data(input_path, balance, shuffe_data = True):
     logging.info("Reading files from {}".format(input_path))
     files = glob.glob(input_path)
+    files.sort()
     logging.info("Number of files available : {}".format(len(files)))
     all_data = []
     for idx, file in enumerate(files):
@@ -187,6 +195,7 @@ def train_AI(input_path, model_save_path):
     logging.info("Model Created successfully")
 
     logging.info("Starting Training")
+    trainer()
     train(logging, model, config['loss_weights'], train_data_X, train_data_Y, validation_data_X, validation_data_Y,  args.num_epochs, args.lr, args.gpu, args.gpu_number, args.save_model, args.print_after, args.validate_after, args.save_after)
     logging.info("Training Completed")
     
@@ -234,14 +243,14 @@ def train_AI_with_loaders(input_path, model_save_path):
     logging.info("Model Created successfully")
 
     logging.info("Starting Training")
-    train_with_loader(logging, model, config['loss_weights'], train_loader, val_loader,  args.num_epochs, args.lr, args.gpu, args.gpu_number, args.save_model, args.print_after, args.validate_after, args.save_after)
+    trainer(logging, model, config['loss_weights'], train_loader, val_loader,  args.num_epochs, args.lr, args.gpu, args.gpu_number, args.save_model, args.print_after, args.validate_after, args.save_after)
     logging.info("Training Completed")
     
     if(len(val_loader) > 0):
         logging.info("Testing on Validation Set")
         test_with_loader(logging, model, config['loss_weights'], val_loader, args.gpu, args.gpu_number)
     
-    if( len(test)loader) > 0):
+    if(len(test_loader) > 0):
         logging.info("Testing on Test Set")
         test_with_loader(logging, model, config['loss_weights'], test_loader, args.gpu, args.gpu_number)
 
