@@ -69,31 +69,40 @@ def train_with_loader(logging, epoch, model, optimizer, weight, train_loader, GP
     num_batches = len(train_loader)
 
     confMatrix = tnt.meter.ConfusionMeter(5)
+    total_loss = 0
+    correct = 0
+    batch_size = train_loader.batch_size
+    data_len = num_batches * batch_size
 
-    for batch_idx, (X, Y) in enumerate(train_loader):
-        #rint("Training ", X, Y)
-        #X, Y = convert_to_torch_tensor(X, Y)
-        #X = [x[batch_idx] for x in data_X] 
-        Y = torch.max(Variable(Y), 1)[1]
-        if USE_CUDA:
-            X = [x.cuda(gpu_number) for x in X]
-            Y = Y.cuda(gpu_number)
-        optimizer.zero_grad()
-        prediction = model(X)
-        confMatrix.add(prediction.clone().detach(),Y.clone().detach())
-        loss = F.cross_entropy(prediction, Y, weight = weight_tensor)
-        loss.backward()
-        optimizer.step()
-        if batch_idx % print_after_every == 0:
-            logging.info('Train Epoch: {} Batch Index: {} Total Number of Batches: {} \tLoss: {:.6f}'.format(
-                epoch, batch_idx , num_batches, loss.item()))
+    with torch.set_grad_enabled(True):
+        for batch_idx, (X, Y) in enumerate(train_loader):
+
+            Y = torch.max(Variable(Y), 1)[1]
+            if USE_CUDA:
+                X = [x.cuda(gpu_number) for x in X]
+                Y = Y.cuda(gpu_number)
+            optimizer.zero_grad()
+            prediction = model(X)
+            confMatrix.add(prediction.clone().detach(),Y.clone().detach())
+            loss = F.cross_entropy(prediction, Y, weight = weight_tensor)
+            loss.backward()
+            optimizer.step()
+
+            total_loss += loss.item()
+            prediction = prediction.data.max(1, keepdim=True)[1]
+            c = prediction.eq(Y.data.view_as(prediction)).cpu().sum()
+            correct += c
+
+            if batch_idx % print_after_every == 0:
+                logging.info('Train Epoch: {} Batch Index: {} Total Number of Batches: {} \tLoss: {:.6f} \tAccuracy {}/{}'.format(
+                    epoch, batch_idx , num_batches, loss.item(), c, batch_size))
 
     logging.info('\nConfusion Matrix on Train for epoch {} \n {}\n'.format(epoch,
                     confMatrix.value()))
-    
 
-    torch.cuda.empty_cache()
-    time.sleep(5)
+    logging.info('\nTrain set: Average loss: {:.4f}, Accuracy: {}/{} ({:.4f}%)\n'.format(
+        total_loss/num_batches, correct, data_len,
+        100.0 * float(correct) / data_len))
 
 
 
@@ -110,31 +119,29 @@ def test_with_loader(logging, model, weight, test_loader, GPU, gpu_number):
     confMatrix = tnt.meter.ConfusionMeter(5)
     num_batches = len(test_loader)
     batch_size = test_loader.batch_size
-    for batch_idx, (X, Y) in enumerate(test_loader):
-
-        #X = [x[batch_idx] for x in data_X]
-        Y = torch.max(Variable(Y), 1)[1]
-
-        
-        if USE_CUDA:
-            X = [x.cuda(gpu_number) for x in X]
-            Y = Y.cuda(gpu_number)
-        prediction = model(X)
-        confMatrix.add(prediction.clone().detach(),Y.clone().detach())
-        loss += F.cross_entropy(prediction, Y, weight = weight_tensor, reduction='sum').item()
-        prediction = prediction.data.max(1, keepdim=True)[1]
-        correct += prediction.eq(Y.data.view_as(prediction)).cpu().sum()
     data_len = num_batches * batch_size
+
+    with torch.set_grad_enabled(False):
+        for batch_idx, (X, Y) in enumerate(test_loader):
+
+            Y = torch.max(Variable(Y), 1)[1]
+            if USE_CUDA:
+                X = [x.cuda(gpu_number) for x in X]
+                Y = Y.cuda(gpu_number)
+            prediction = model(X)
+            confMatrix.add(prediction.clone().detach(),Y.clone().detach())
+            loss += F.cross_entropy(prediction, Y, weight = weight_tensor, reduction='sum').item()
+            prediction = prediction.data.max(1, keepdim=True)[1]
+            correct += prediction.eq(Y.data.view_as(prediction)).cpu().sum()
+
     loss /= data_len
-    logging.info('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.4f}%)\n'.format(
-        loss, correct, data_len,
-        100.0 * float(correct) / data_len))
 
     logging.info('\nConfusion Matrix on Test \n{}\n'.format(
         confMatrix.value()))
 
-    torch.cuda.empty_cache()
-    time.sleep(5)
+    logging.info('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.4f}%)\n'.format(
+        loss, correct, data_len,
+        100.0 * float(correct) / data_len))
 
 
 
