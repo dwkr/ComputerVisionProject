@@ -21,7 +21,7 @@
     "seed": 7,
     "model": "MainModel",
     "model_dict": {
-                    "ImageSqueezeNet": [3,1024],
+                    "ImageResNet18": [3,1024],
                     "MapEdLeNet": [1,64],
                     "SpeedEdLeNet": [1,64]
                     },

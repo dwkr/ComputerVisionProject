@@ -16,17 +16,32 @@ class Image_Xception(nn.Module):
     def name(self):
        return "Image_Xception"
 
+
+class ImageResNet18(nn.Module):
+    """docstring for ImageResNet18"""
+    def __init__(self,num_inputs, num_outputs):
+       super(ImageResNet18, self).__init__()
+       self.model = models.resnet18()
+       self.model.conv1 = nn.Conv2d(num_inputs, 64, kernel_size=(7,7), stride=(2, 2), padding=(3, 3), bias=False)
+       self.model.fc = nn.Linear(in_features=512, out_features=num_outputs, bias=True)
+
+    def forward(self, x):
+       x = self.model(x)
+       return x
+
+    def name(self):
+       return "ImageResNet18"
+
+
 class ImageResNet50(nn.Module):
     """docstring for ImageResNet50"""
     def __init__(self,num_inputs, num_outputs):
        super(ImageResNet50, self).__init__()
        self.model = models.resnet50()
-       self.avgPoool = nn.AvgPool2d(76, stride=1)
        self.model.conv1 = nn.Conv2d(num_inputs, 64, kernel_size=(7,7), stride=(2, 2), padding=(3, 3), bias=False)
        self.model.fc = nn.Linear(in_features=2048, out_features=num_outputs, bias=True)
 
     def forward(self, x):
-       x = self.avgPoool(x)
        x = self.model(x)
        return x
 
@@ -73,16 +88,11 @@ class ImageSqueezeNet(nn.Module):
     def __init__(self,num_inputs, num_outputs):
        super(ImageSqueezeNet, self).__init__()
        self.model = models.squeezenet1_1(num_classes = num_outputs)
-       #self.model.classifier[3] = nn.AvgPool2d(kernel_size=18, stride=1, padding=0)
 
     def forward(self, x):
-       x = self.model.features(x)
-       x = self.model.classifier(x) # x--> 32 X 1024 X 5 X 5
-       x = nn.AvgPool2d(kernel_size=6, stride=1, padding=0)(x)
+       x = self.model(x)
        x = x.view(x.size(0), 1024)
        return x
 
     def name(self):
        return "ImageSqueezeNet"
-
-

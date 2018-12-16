@@ -42,7 +42,7 @@ def get_input_from_screen():
     
     road_map = extractMap(screen).astype(dtype=np.float32).reshape(1,1,64,64)
     speed = extractSpeed(screen).astype(dtype=np.float32).reshape(1,1,64,64)
-    image_fov = restrictFOV(screen).reshape(1,3,299,299)
+    image_fov = restrictFOV(screen).reshape(1,3,224,224)
 
     return  torch.from_numpy(normalizer_set.normalize(image_fov,'X1')), torch.from_numpy(normalizer_set.normalize(road_map,'X2')), torch.from_numpy(normalizer_set.normalize(speed,'X3'))
 
