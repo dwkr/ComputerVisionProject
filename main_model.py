@@ -5,6 +5,7 @@ import torch.optim as optim
 import torchvision
 from xception import xception
 from image_model import *
+from clip_model import *
 from map_model import *
 from speed_model import *
 from history_model import *
@@ -23,23 +24,32 @@ class MainModel(nn.Module):
 
         self.fc = nn.Sequential(
                                 nn.Dropout(p=0.5),
+                                #nn.Linear(inputs + 512, 2048),
                                 nn.Linear(inputs, 2048),
                                 nn.ReLU(),
-                                 nn.Linear(2048, 512),
-                                 nn.ReLU(),
-                                 nn.Linear(512,128),
-                                 nn.ReLU(),
-                                 nn.Linear(128,num_classes))
+                                nn.Linear(2048, 512),
+                                nn.ReLU(),
+                                nn.Linear(512,128),
+                                nn.ReLU(),
+                                nn.Linear(128,num_classes))
 
     def forward(self, x):
         output = []
+        prev_output = None
+        # for idx, model in enumerate(self.models):
+        #     if idx == 0:
+        #         prev_output, out = model(x[idx])
+        #     else:
+        #         out = model(x[idx])
+        #     output.append(out)
+
         for idx, model in enumerate(self.models):
             output.append(model(x[idx]))
-       
-        x = torch.cat(output,dim = -1)
 
+        x = torch.cat(output, dim=-1)
 
         x = self.fc(x)
+        #return prev_output, x
         return x
 
     def name(self):

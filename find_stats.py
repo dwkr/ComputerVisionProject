@@ -10,7 +10,7 @@ def findStats(logging, train_data_loader, calculate):
     if not calculate:
         if os.path.exists(statsfile):
             with open(statsfile, 'r') as file:
-                logging.info('\nReading stats from file {} \n'.format(statsfile))
+                #logging.info('\nReading stats from file {} \n'.format(statsfile))
                 return json.load(file)
         else:
             logging.info('\nFile {} not found.Calculating stats.\n'.format(statsfile))

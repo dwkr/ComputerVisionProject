@@ -14,8 +14,11 @@ import json
 import sys
 from main_model import MainModel
 from GTA_data_set import GTADataset
+from GTA_clip_data_set import GTAClipDataSet
 import torch
 from find_stats import findStats
+import pprint
+import re
 
 config_file_path = "configs/config.json"
 
@@ -29,6 +32,9 @@ parser.add_argument('--num_epochs', default=config['num_epochs'], type=int,
 
 parser.add_argument('--batch_size', type=int, default=config['batch_size'],
     help='Batch Size')
+
+parser.add_argument('--clip_len', type=int, default=config['clip_len'],
+    help='Clip Length')
 
 parser.add_argument('--gpu', action='store_true', default=config['gpu'],
     help='Use GPU')
@@ -110,6 +116,8 @@ logging.info("Reading config from : {}".format(config_file_path))
 
 logging.info(args)
 
+logging.info("Config : {}".format(json.dumps(config, indent=4)))
+
 if(args.train_ratio + args.test_ratio + args.validation_ratio != 1.0):
     raise ValueError('Sum of Train, Test and Validation Ratios must be 1.0')
 
@@ -163,46 +171,6 @@ def create_batches(data, batch_size):
     X4 = np.array([i[4] for i in data], dtype=np.float32).reshape(n_batches,100,5)
     Y = np.array([i[1] for i in data]).reshape(n_batches,  5)
     return X1, X2, X3, X4, Y
-
-def train_AI(input_path, model_save_path):
-    data = load_data(input_path, balance = args.balance, shuffe_data = args.shuffle_data)
-    batched_data_X1, batched_data_X2, batched_data_X3, batched_data_X4, batched_data_Y = create_batches(data, args.batch_size)
-    train_data_X1, validation_data_X1, test_data_X1 = create_sets(batched_data_X1, args.train_ratio, args.validation_ratio, args.test_ratio)
-    train_data_X2, validation_data_X2, test_data_X2 = create_sets(batched_data_X2, args.train_ratio, args.validation_ratio, args.test_ratio)
-    train_data_X3, validation_data_X3, test_data_X3 = create_sets(batched_data_X3, args.train_ratio, args.validation_ratio, args.test_ratio)
-    train_data_X4, validation_data_X4, test_data_X4 = create_sets(batched_data_X4, args.train_ratio, args.validation_ratio, args.test_ratio)
-    
-    stats = { "X1": {"mean": np.mean(train_data_X1/255,axis=(0,2,3)), "std": np.std(train_data_X1/255,axis=(0,2,3))},
-              "X2": {"mean": np.mean(train_data_X2/255,axis=(0,2,3)), "std": np.std(train_data_X2/255,axis=(0,2,3))},
-              "X3": {"mean": np.mean(train_data_X3/255,axis=(0,2,3)), "std": np.std(train_data_X3/255,axis=(0,2,3))}
-            }
-    
-    print(stats)
-    train_data_X = [train_data_X1, train_data_X2, train_data_X3, train_data_X4]
-    validation_data_X = [validation_data_X1, validation_data_X2, validation_data_X3, validation_data_X4]
-    test_data_X = [test_data_X1, test_data_X2, test_data_X3, test_data_X4]
-    train_data_Y, validation_data_Y, test_data_Y = create_sets(batched_data_Y, args.train_ratio, args.validation_ratio, args.test_ratio)
-
-    logging.info("Number of Training Examples : {}".format(train_data_X1.shape[0] * train_data_X1.shape[1]))
-    logging.info("Number of Validation Examples : {}".format(validation_data_X1.shape[0] * validation_data_X1.shape[1]))
-    logging.info("Number of Test Examples : {}".format(test_data_X1.shape[0] * test_data_X1.shape[1]))
-
-    logging.info("Creating Model Graph")
-    model = getattr(sys.modules[__name__],args.model)(config['model_dict'],5)
-    logging.info("Model Created successfully")
-
-    logging.info("Starting Training")
-    trainer()
-    train(logging, model, config['loss_weights'], train_data_X, train_data_Y, validation_data_X, validation_data_Y,  args.num_epochs, args.lr, args.gpu, args.gpu_number, args.save_model, args.print_after, args.validate_after, args.save_after)
-    logging.info("Training Completed")
-    
-    if(validation_data_X.shape[0] * validation_data_X.shape[1] > 0):
-        logging.info("Testing on Validation Set")
-        test(logging, model, config['loss_weights'], validation_data_X, validation_data_Y, args.gpu)
-    
-    if( test_data_X.shape[0] * test_data_X.shape[1] > 0):
-        logging.info("Testing on Test Set")
-        test(logging, model, config['loss_weights'], test_data_X, test_data_Y, args.gpu, args.gpu_number)
         
         
     
@@ -217,26 +185,46 @@ def create_loader_sets(data, train_ratio, validation_ratio, test_ratio, stats, n
     return train_dataset, validation_dataset, test_dataset   
     
 def train_AI_with_loaders(input_path, model_save_path):
-    data = load_data(input_path, balance = args.balance, shuffe_data = args.shuffle_data)
+    #data = load_data(input_path, balance = args.balance, shuffe_data = args.shuffle_data)
     
-    stat_dataset, _ ,_ = create_loader_sets(data, args.train_ratio, args.validation_ratio, args.test_ratio, None, False)
-    stat_loader = torch.utils.data.DataLoader(stat_dataset,batch_size = args.batch_size, shuffle = True, num_workers = 0)
+    #stat_dataset, _ ,_ = create_loader_sets(data, args.train_ratio, args.validation_ratio, args.test_ratio, None, False)
+    #stat_loader = torch.utils.data.DataLoader(stat_dataset,batch_size = args.batch_size, shuffle = True, num_workers = 0)
     
-    stats = findStats(logging, stat_loader, args.cal_stats)
-    stat_dataset = None
-    stat_loader = None
+    #stats = findStats(logging, stat_loader, args.cal_stats)
+    #stat_dataset = None
+    #stat_loader = None
     
-    train_dataset, val_dataset, test_dataset = create_loader_sets(data, args.train_ratio, args.validation_ratio, args.test_ratio, stats, True)
-    train_loader = torch.utils.data.DataLoader(train_dataset,batch_size = args.batch_size, shuffle = True, num_workers = 0)
-    val_loader = torch.utils.data.DataLoader(val_dataset,batch_size = args.batch_size, shuffle = False, num_workers = 0)
-    test_loader = torch.utils.data.DataLoader(test_dataset,batch_size = args.batch_size, shuffle = False, num_workers = 0)
+    #train_dataset, val_dataset, test_dataset = create_loader_sets(data, args.train_ratio, args.validation_ratio, args.test_ratio, stats, True)
+
+    #train_loader = torch.utils.data.DataLoader(train_dataset,batch_size = args.batch_size, shuffle = True, num_workers = 0)
+    #val_loader = torch.utils.data.DataLoader(val_dataset,batch_size = args.batch_size, shuffle = False, num_workers = 0)
+    #test_loader = torch.utils.data.DataLoader(test_dataset,batch_size = args.batch_size, shuffle = False, num_workers = 0)
+
+    train_files = list(filter(lambda i : int(re.search('train_data_(.+?).npy', i).group(1)) <= 480,
+                              glob.glob(args.train_data)))
+    val_files = list(filter(lambda i: int(re.search('train_data_(.+?).npy', i).group(1)) < 500 and int(re.search('train_data_(.+?).npy', i).group(1)) > 480,
+                              glob.glob(args.train_data)))
+
+    test_files = list(filter(lambda i: int(re.search('train_data_(.+?).npy', i).group(1)) < 520 and int(re.search('train_data_(.+?).npy', i).group(1)) > 500,
+                              glob.glob(args.train_data)))
+
+
+
+    train_dataset = GTAClipDataSet(args.train_data, args.clip_len, findStats(None, None, False), logging, files=train_files)
+    val_dataset = GTAClipDataSet(args.train_data, args.clip_len, findStats(None, None, False), logging, files=val_files)
+    test_dataset = GTAClipDataSet(args.train_data, args.clip_len, findStats(None, None, False), logging, files=test_files)
+
+
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=False, num_workers=0)
+    val_loader = torch.utils.data.DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=0)
+    test_loader = torch.utils.data.DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=0)
 
     logging.info("Number of Training Examples : {}".format(len(train_dataset)))
     logging.info("Number of Validation Examples : {}".format(len(val_dataset)))
     logging.info("Number of Test Examples : {}".format(len(test_dataset)))
     
     logging.info("Creating Model Graph")
-    model = getattr(sys.modules[__name__],args.model)(config['model_dict'],5)
+    model = getattr(sys.modules[__name__],args.model)(config['model_dict'], 5)
     logging.info("Model Created successfully")
 
     logging.info("Starting Training")
