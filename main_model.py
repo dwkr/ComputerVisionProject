@@ -21,15 +21,10 @@ class MainModel(nn.Module):
             self.models.append(getattr(sys.modules[__name__],key)(val[0],val[1]))
             inputs += val[1]
 
-        self.fc = nn.Sequential(
+        self.fc = nn.Sequential(nn.Linear(inputs, 256),
                                 nn.Dropout(p=0.5),
-                                nn.Linear(inputs, 2048),
                                 nn.ReLU(),
-                                 nn.Linear(2048, 512),
-                                 nn.ReLU(),
-                                 nn.Linear(512,128),
-                                 nn.ReLU(),
-                                 nn.Linear(128,num_classes))
+                                nn.Linear(256, num_classes))
 
     def forward(self, x):
         output = []

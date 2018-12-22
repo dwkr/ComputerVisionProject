@@ -48,7 +48,7 @@ def field_of_view(image):
     cv2.fillPoly(mask, fields, (255,255,255))
     masked_image = cv2.bitwise_and(image, mask)
 
-    masked_image = crop_image(masked_image, 75, 235, 0, width, 224, 224)
+    masked_image = crop_image(masked_image, 75, 235, 0, width, 112, 112)
 
     return masked_image
  
@@ -66,5 +66,6 @@ def oneHotLastHundred(last100):
 def getFeatures(data):
     ret = []
     for d in data:
+        # ret.append([cv2.resize(d[0],(112,112)), d[1], extractMap(d[0]),extractSpeed(d[0]),oneHotLastHundred(d[3])])
         ret.append([restrictFOV(d[0]),d[1],extractMap(d[0]),extractSpeed(d[0]),oneHotLastHundred(d[3])])
     return ret

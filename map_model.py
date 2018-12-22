@@ -34,28 +34,17 @@ class MapEdLeNet(nn.Module):
             nn.ReLU(),
             nn.Dropout2d(0.5),
             nn.MaxPool2d(kernel_size=2),
-            nn.Conv2d(64, 128, kernel_size=3, bias=False),
-            nn.BatchNorm2d(128),
+            nn.Conv2d(64, 64, kernel_size=7, bias=False),
+            nn.BatchNorm2d(64),
             nn.ReLU(),
             nn.Dropout2d(0.5),
-            nn.MaxPool2d(kernel_size=2)
+            nn.AvgPool2d(kernel_size=7)
         )
-        
-        self.classifier = nn.Sequential(
-           nn.Linear(128 * 5 * 5, 256),
-           nn.ReLU(),
-           nn.Dropout(0.5),
-           nn.Linear(256, 128),
-           nn.ReLU(),
-           nn.Linear(128, num_outputs)
-         )
         
 
     def forward(self, x):
         x = self.features(x)
-        x = x.view(-1, 128 * 5 * 5)
-        #print("X Ki Shape : ", x.shape)
-        x = self.classifier(x)
+        x = x.view(-1, 64)
         return x
 
     def name(self):

@@ -21,12 +21,16 @@ class ImageResNet18(nn.Module):
     """docstring for ImageResNet18"""
     def __init__(self,num_inputs, num_outputs):
        super(ImageResNet18, self).__init__()
-       self.model = models.resnet18()
-       self.model.conv1 = nn.Conv2d(num_inputs, 64, kernel_size=(7,7), stride=(2, 2), padding=(3, 3), bias=False)
-       self.model.fc = nn.Linear(in_features=512, out_features=num_outputs, bias=True)
+       model = models.resnet18()
+       model.conv1 = nn.Conv2d(num_inputs, 64, kernel_size=(7,7), stride=(2, 2), padding=(3, 3), bias=False)
+       modules = list(models.resnet18().children())[:-2]
+       self.model = nn.Sequential(*modules)
+       self.avgPoool = nn.AvgPool2d(kernel_size=4, stride=1, padding=0)
 
     def forward(self, x):
        x = self.model(x)
+       x = self.avgPoool(x)
+       x = x.view(-1, 512)
        return x
 
     def name(self):
