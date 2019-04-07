@@ -1,3 +1,0 @@
-1) check vis_map in whole data.
-2) image normalisation
-3) normalisation in between
